@@ -1,0 +1,7 @@
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\classes\debug
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\support-annotations-21.0.3-e0ab813e6cf832acc12fc98a17bbf32943506848.jar
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\bolts-android-1.1.2-1b6dfa4797e53d292309e580ffe6ac53b16d0d62.jar
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\internal_impl-21.0.3-ec1978771eeb11c562eb01adf9680a4ef8b1243b.jar
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-2f8cf07a94fd244aa7af0b3503a070a1dc121c74.jar
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-08301f1a7a0afd31cdb9191a1af01e27d1ebdcc0.jar
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-5fe9c51ffe1fea9e5bb80fb8ab10fc5ca227af4b.jar

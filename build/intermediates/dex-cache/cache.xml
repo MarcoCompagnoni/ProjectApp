@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\exploded-aar\ProjectApp\facebookSDK\unspecified\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="f0a47d8ca2c7ba40be6972f5d600d9524e6e48c8">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-08301f1a7a0afd31cdb9191a1af01e27d1ebdcc0.jar" />
+    </item>
+    <item
+        jar="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\exploded-aar\com.android.support\support-v4\21.0.3\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-5fe9c51ffe1fea9e5bb80fb8ab10fc5ca227af4b.jar" />
+    </item>
+    <item
+        jar="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\exploded-aar\com.android.support\appcompat-v7\21.0.3\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="81d42bf983a8741f4888a6e333e454e4a5e0eeb7">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-2f8cf07a94fd244aa7af0b3503a070a1dc121c74.jar" />
+    </item>
+    <item
+        jar="C:\Users\compagnoni\Android SDK\extras\android\m2repository\com\android\support\support-annotations\21.0.3\support-annotations-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\support-annotations-21.0.3-e0ab813e6cf832acc12fc98a17bbf32943506848.jar" />
+    </item>
+    <item
+        jar="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\exploded-aar\com.android.support\support-v4\21.0.3\libs\internal_impl-21.0.3.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\internal_impl-21.0.3-ec1978771eeb11c562eb01adf9680a4ef8b1243b.jar" />
+    </item>
+    <item
+        jar="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\exploded-aar\ProjectApp\facebookSDK\unspecified\libs\bolts-android-1.1.2.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="91c20388c9a45f62b5ed8fe0502bb76ff6251fc7">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\bolts-android-1.1.2-1b6dfa4797e53d292309e580ffe6ac53b16d0d62.jar" />
+    </item>
+
+</items>
