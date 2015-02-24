@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ProjectApp.iml" filepath="$PROJECT_DIR$/ProjectApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/facebookSDK/facebookSDK.iml" filepath="$PROJECT_DIR$/facebookSDK/facebookSDK.iml" />
-      <module fileurl="file://$PROJECT_DIR$/projectApp/projectApp-0.1.iml" filepath="$PROJECT_DIR$/projectApp/projectApp-0.1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/projectApp/projectApp.iml" filepath="$PROJECT_DIR$/projectApp/projectApp.iml" />
     </modules>
   </component>
 </project>

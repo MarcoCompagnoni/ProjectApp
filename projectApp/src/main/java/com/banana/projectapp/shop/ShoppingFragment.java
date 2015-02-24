@@ -5,14 +5,23 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.banana.projectapp.DataHolder;
+import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
+import com.banana.projectapp.exception.CouponInvalid;
+import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.SocialAccountInvalid;
+import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -23,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +42,11 @@ public class ShoppingFragment extends Fragment{
 	ShoppingAdapter adapter;
 	ListView list;
 	String email;
+    ClientStub client;
     DownloadShoppingImagesTask shoppingImagesTask;
+    SynchronizeCouponsTask synchronizeCouponsTask;
+    RequestCouponTask requestCouponTask;
+
     private List<ShoppingItem> items;
 	
 	public static ShoppingFragment newInstance(String email) {
@@ -44,12 +58,21 @@ public class ShoppingFragment extends Fragment{
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-	}
+        try {
+            client = new ClientStub(getActivity());
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void onDestroy(){
         if (shoppingImagesTask!= null)
             shoppingImagesTask.cancel(true);
+        if (requestCouponTask != null)
+            requestCouponTask.cancel(true);
+        if (synchronizeCouponsTask != null)
+            synchronizeCouponsTask.cancel(true);
         super.onDestroy();
     }
 	
@@ -61,6 +84,20 @@ public class ShoppingFragment extends Fragment{
 		TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
 		nome.setText(email);
 		nome.invalidate();
+
+        final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);
+        synchronizeCoupons.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (synchronizeCouponsTask != null){
+                    return;
+                }
+
+                synchronizeCouponsTask = new SynchronizeCouponsTask();
+                synchronizeCouponsTask.execute((Void) null);
+            }
+        });
+
 		list = (ListView) rootView.findViewById(R.id.list_view);
 		URL[] urls = new URL[4];
  		try {
@@ -94,6 +131,37 @@ public class ShoppingFragment extends Fragment{
                 }
             });
         }
+
+        final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        if (requestCouponTask != null){
+                            return;
+                        }
+
+                        //TODO
+                        int coupon = 0;
+
+                        requestCouponTask = new RequestCouponTask(coupon);
+                        requestCouponTask.execute((Void) null);
+                        break;
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        break;
+                }
+            }
+        };
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                builder.setMessage("Are you sure?").setPositiveButton("Hell yeah!!", dialogClickListener)
+                        .setNegativeButton("Nah, fuck it", dialogClickListener).show();
+            }
+        });
+
         return rootView;
 	}
 
@@ -103,6 +171,73 @@ public class ShoppingFragment extends Fragment{
         int fragment_id = 2;
         ((MainFragmentActivity) activity).onSectionAttached(fragment_id);
 	}
+
+    private class SynchronizeCouponsTask extends AsyncTask<Void, Void, Boolean> {
+
+        SynchronizeCouponsTask() {}
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.synchronizeCoupons(ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            synchronizeCouponsTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            synchronizeCouponsTask = null;
+            super.onCancelled();
+        }
+    }
+
+    private class RequestCouponTask extends AsyncTask<Void, Void, Boolean> {
+
+        int mCoupon;
+        RequestCouponTask(int coupon) {
+            mCoupon = coupon;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.requestCoupon(mCoupon, ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid | CouponInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            requestCouponTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            requestCouponTask = null;
+            super.onCancelled();
+        }
+    }
 
     private class DownloadShoppingImagesTask extends AsyncTask<URL, Integer, Long> {
         public Long doInBackground(URL... urls) {

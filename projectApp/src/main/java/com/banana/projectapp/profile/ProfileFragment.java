@@ -14,6 +14,8 @@ import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.SocialAccountInvalid;
+import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 
@@ -44,6 +46,9 @@ public class ProfileFragment extends Fragment{
     DownloadSocialsImagesTask socialsImagesTask;
     ChangeMailTask changeMailTask;
     ChangePasswordTask changePasswordTask;
+    DeleteSocialTask deleteSocialTask;
+    AddSocialTask addSocialTask;
+    DeleteAccountTask deleteAccountTask;
 
     private List<Social> socials;
 	
@@ -71,6 +76,12 @@ public class ProfileFragment extends Fragment{
             changeMailTask.cancel(true);
         if (changePasswordTask!= null)
             changePasswordTask.cancel(true);
+        if (deleteAccountTask!=null)
+            deleteAccountTask.cancel(true);
+        if (deleteSocialTask!= null)
+            deleteSocialTask.cancel(true);
+        if (addSocialTask!=null)
+            addSocialTask.cancel(true);
         super.onDestroy();
     }
 
@@ -94,6 +105,47 @@ public class ProfileFragment extends Fragment{
                 changeMailTask.execute((Void) null);
             }
         });
+
+        final Button change_password = (Button) rootView.findViewById(R.id.change_password);
+        change_password.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (changePasswordTask != null){
+                    return;
+                }
+                changePasswordTask = new ChangePasswordTask(email);
+                changePasswordTask.execute((Void) null);
+            }
+        });
+
+        final Button addSocial = (Button) rootView.findViewById(R.id.addSocial);
+        addSocial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (addSocialTask != null){
+                    return;
+                }
+
+                //TODO
+                int socialType = 0;
+                String socialToken = "a";
+                addSocialTask = new AddSocialTask(socialType, socialToken);
+                changePasswordTask.execute((Void) null);
+            }
+        });
+
+        final Button removeAccount = (Button) rootView.findViewById(R.id.removeAccount);
+        removeAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (deleteAccountTask != null){
+                    return;
+                }
+                deleteAccountTask = new DeleteAccountTask(email);
+                deleteAccountTask.execute((Void) null);
+            }
+        });
+
 		list = (ListView) rootView.findViewById(R.id.list_view);
 		URL[] urls = new URL[2];
  		try {
@@ -107,7 +159,6 @@ public class ProfileFragment extends Fragment{
         socials = db.getSocials();
         db.close();
 
-        //TODO verificare che il db sia aggiornato
         if (socials.size() < 2){
             Toast.makeText(getActivity(),"nessun social in db, le scarico e le inserisco",Toast.LENGTH_SHORT).show();
 
@@ -138,7 +189,7 @@ public class ProfileFragment extends Fragment{
         ((MainFragmentActivity) activity).onSectionAttached(fragment_id);
 	}
 
-    public class ChangeMailTask extends AsyncTask<Void, Void, Boolean> {
+    private class ChangeMailTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String mEmail;
 
@@ -150,7 +201,7 @@ public class ProfileFragment extends Fragment{
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (DataHolder.production) {
+                if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
                     client.changeEmail(mEmail, ember_token);
                 }
@@ -174,7 +225,7 @@ public class ProfileFragment extends Fragment{
         }
     }
 
-    public class ChangePasswordTask extends AsyncTask<Void, Void, Boolean> {
+    private class ChangePasswordTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String mPassword;
 
@@ -186,7 +237,7 @@ public class ProfileFragment extends Fragment{
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (DataHolder.production) {
+                if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
                     client.changePassword(mPassword, ember_token);
                 }
@@ -206,6 +257,116 @@ public class ProfileFragment extends Fragment{
         @Override
         protected void onCancelled() {
             changePasswordTask = null;
+            super.onCancelled();
+        }
+    }
+
+    private class DeleteAccountTask extends AsyncTask<Void, Void, Boolean> {
+
+        private final String mEmail;
+
+        DeleteAccountTask(String email) {
+            mEmail = email;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.deleteYourAccount(mEmail, ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid | UserInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            deleteAccountTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            deleteAccountTask = null;
+            super.onCancelled();
+        }
+    }
+
+    private class DeleteSocialTask extends AsyncTask<Void, Void, Boolean> {
+
+        private final int mSocialType;
+
+        DeleteSocialTask(int socialType) {
+            mSocialType = socialType;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.deleteSocial(mSocialType, ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            deleteSocialTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            deleteSocialTask = null;
+            super.onCancelled();
+        }
+    }
+
+    private class AddSocialTask extends AsyncTask<Void, Void, Boolean> {
+
+        private final int mSocialType;
+        private final String mSocialToken;
+
+        AddSocialTask(int socialType, String socialToken) {
+            mSocialType = socialType;
+            mSocialToken = socialToken;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.addSocial(mSocialType, mSocialToken, ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid | SocialAccountTokenInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            addSocialTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            addSocialTask = null;
             super.onCancelled();
         }
     }

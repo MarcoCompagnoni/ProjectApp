@@ -5,12 +5,19 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.banana.projectapp.DataHolder;
+import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.FacebookPhotos;
 import com.banana.projectapp.R;
+import com.banana.projectapp.exception.CampaignInvalid;
+import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.PhotoInvalid;
+import com.banana.projectapp.exception.SocialAccountInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 
 import android.app.Activity;
@@ -25,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +43,10 @@ public class CampagneFragment extends Fragment {
 	com.banana.projectapp.campagne.CampaignAdapter adapter;
 	ListView list;
 	String email;
+    ClientStub client;
     DownloadCompaniesImagesTask companiesImagesTask;
+    SynchronizeCampaignTask synchronizeCampaignTask;
+
     private List<CompanyCampaign> campaigns;
 
     public static CampagneFragment newInstance(String email) {
@@ -47,12 +58,20 @@ public class CampagneFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            client = new ClientStub(getActivity());
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onDestroy(){
         if (companiesImagesTask!= null)
             companiesImagesTask.cancel(true);
+        if (synchronizeCampaignTask != null)
+            synchronizeCampaignTask.cancel(true);
+
         super.onDestroy();
     }
 	
@@ -65,6 +84,20 @@ public class CampagneFragment extends Fragment {
         nome.setText(email);
         Log.e("ciao", "email = " + email);
         nome.invalidate();
+
+        final Button synchronizeCampaign = (Button) rootView.findViewById(R.id.synchronizeCampaign);
+        synchronizeCampaign.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (synchronizeCampaignTask != null){
+                    return;
+                }
+
+                synchronizeCampaignTask = new SynchronizeCampaignTask();
+                synchronizeCampaignTask.execute((Void) null);
+            }
+        });
+
         list = (ListView) rootView.findViewById(R.id.list_view);
 
         URL[] urls = new URL[5];
@@ -111,6 +144,38 @@ public class CampagneFragment extends Fragment {
         int fragment_id = 1;
         ((MainFragmentActivity) activity).onSectionAttached(fragment_id);
 	}
+
+    private class SynchronizeCampaignTask extends AsyncTask<Void, Void, Boolean> {
+
+        SynchronizeCampaignTask() {}
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.synchronizeCampaigns(ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            synchronizeCampaignTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            synchronizeCampaignTask = null;
+            super.onCancelled();
+        }
+    }
 
     private class DownloadCompaniesImagesTask extends AsyncTask<URL, Integer, Long> {
         public Long doInBackground(URL... urls) {

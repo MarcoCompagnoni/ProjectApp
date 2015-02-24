@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -26,6 +27,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.banana.projectapp.communication.ClientStub;
+import com.banana.projectapp.exception.CampaignInvalid;
+import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.PhotoInvalid;
+import com.banana.projectapp.exception.SocialAccountInvalid;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
@@ -48,6 +54,7 @@ import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
@@ -71,10 +78,12 @@ public class FacebookPhotos extends ActionBarActivity {
     LoginButton authButton = null;
 	private UiLifecycleHelper uiHelper;
 	Session session;
+    ClientStub client;
     Request photosRequest = null;
 	ArrayList<Bitmap> images = new ArrayList<>();
 	ArrayList<String> sources = new ArrayList<>();
     ArrayList<String> places = new ArrayList<>();
+    ParticipateCampaignTask participateCampaignTask;
     String token = null;
 	String toSend = null;
 	
@@ -83,8 +92,14 @@ public class FacebookPhotos extends ActionBarActivity {
 	    super.onCreate(savedInstanceState);
 	    this.setContentView(R.layout.facebook_photos);
 	    uiHelper = new UiLifecycleHelper(this, callback);
-	    
-	    setupLogin();
+
+        try {
+            client = new ClientStub(this);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
+        setupLogin();
 	    setupGridAdapter();
         setupListAdapter();
 	    setupPhotoButton();
@@ -121,6 +136,8 @@ public class FacebookPhotos extends ActionBarActivity {
 
 	@Override
 	public void onDestroy() {
+        if (participateCampaignTask != null)
+            participateCampaignTask.cancel(true);
 	    super.onDestroy();
 	    uiHelper.onDestroy();
 	}
@@ -146,7 +163,8 @@ public class FacebookPhotos extends ActionBarActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        //return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 
 	private String getApplicationHASH(){
@@ -171,7 +189,7 @@ public class FacebookPhotos extends ActionBarActivity {
 	}
 	
 	private void setupPhotoButton() {
-	    Button button = (Button) findViewById(R.id.button1);
+	    Button button = (Button) findViewById(R.id.photosButton);
 	    button.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -377,7 +395,17 @@ public class FacebookPhotos extends ActionBarActivity {
 	        public void onClick(DialogInterface dialog, int which) {
 	            switch (which){
 	            case DialogInterface.BUTTON_POSITIVE:
-	            	Toast.makeText(FacebookPhotos.this, "you are dead, sir", Toast.LENGTH_SHORT).show();
+                    if (participateCampaignTask != null){
+                        return;
+                    }
+
+                    //TODO
+                    int campaign = 0;
+                    int socialType = 0;
+                    String url = "a";
+
+                    participateCampaignTask = new ParticipateCampaignTask(campaign, socialType, url);
+                    participateCampaignTask.execute((Void) null);
 	                break;
 	            case DialogInterface.BUTTON_NEGATIVE:
 	                break;
@@ -435,5 +463,46 @@ public class FacebookPhotos extends ActionBarActivity {
 	        	Log.i(TAG, "Logged out...");
 	    }
 	}
+
+    private class ParticipateCampaignTask extends AsyncTask<Void, Void, Boolean> {
+
+
+        int mCampaign;
+        int mSocialType;
+        String photoUrl;
+
+        ParticipateCampaignTask(int campaign, int socialType, String url) {
+            mCampaign = campaign;
+            mSocialType = socialType;
+            photoUrl = url;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.participateCampaign(mCampaign,mSocialType,photoUrl,ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid | PhotoInvalid | CampaignInvalid | SocialAccountInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            participateCampaignTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+            participateCampaignTask = null;
+            super.onCancelled();
+        }
+    }
 }
 

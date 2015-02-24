@@ -11,9 +11,6 @@ import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 
 import java.io.IOException;
 
-/**
- * Created by Compagnoni on 15/01/2015.
- */
 public interface CommunicationProfileInterface {
 
     void registration(String email, String password)

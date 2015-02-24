@@ -8,9 +8,6 @@ import com.banana.projectapp.exception.SocialAccountInvalid;
 
 import java.io.IOException;
 
-/**
- * Created by Compagnoni on 15/01/2015.
- */
 public interface CommunicationCommercialInterface {
 
     void synchronizeCampaigns(String ember_token)

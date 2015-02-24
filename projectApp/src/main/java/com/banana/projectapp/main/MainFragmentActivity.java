@@ -144,7 +144,8 @@ public class MainFragmentActivity extends ActionBarActivity implements
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        //return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item);
     }
 
 	/**
@@ -198,7 +199,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (DataHolder.production) {
+                if (DataHolder.testing) {
                     client.logout(mEmail);
                 }
                 return true;

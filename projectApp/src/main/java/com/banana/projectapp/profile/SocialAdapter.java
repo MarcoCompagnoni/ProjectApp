@@ -75,7 +75,8 @@ public class SocialAdapter extends BaseAdapter {
             public void onClick(View v) {
                 Toast.makeText(v.getContext(),"rimuovo "+social.getName(),Toast.LENGTH_SHORT).show();
                 try {
-                    client.deleteSocial((int)social.getId(), DataHolder.getToken());
+                    if (DataHolder.testing)
+                        client.deleteSocial((int)social.getId(), DataHolder.getToken());
                 } catch (EmberTokenInvalid | SocialAccountInvalid | IOException emberTokenInvalid) {
                     emberTokenInvalid.printStackTrace();
                 }

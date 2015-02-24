@@ -12,7 +12,6 @@ import com.banana.projectapp.exception.UserInvalid;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -196,7 +195,7 @@ public class LoginActivity extends ActionBarActivity {
 		@Override
 		protected Boolean doInBackground(Void... params) {
             try {
-                if (DataHolder.production) {
+                if (DataHolder.testing) {
                     String token = client.login(mEmail, mPassword);
                     DataHolder.setToken(token);
                 }
