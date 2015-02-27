@@ -20,8 +20,8 @@ import com.banana.projectapp.shop.ShoppingItem;
 
 public class DBManager{
 
-    public static final String DATABASE_NAME = "PROJECT.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final String DATABASE_NAME = "FRIENZ.db";
+    public static final int DATABASE_VERSION = 2;
 
     public static final String CAMPAIGNS_TABLE = "CAMPAIGNS";
     public static final String SOCIALS_TABLE = "SOCIALS";
@@ -57,19 +57,19 @@ public class DBManager{
 
     public long insert(Social social) throws SQLiteException,NullPointerException{
         if(social == null)
-            throw new NullPointerException("missing account");
+            throw new NullPointerException("missing social");
         ContentValues values = toContentValue(social);
         return db.insert(SOCIALS_TABLE, null, values);
     }
     public long insert(CompanyCampaign campaign) throws SQLiteException,NullPointerException{
         if(campaign == null)
-            throw new NullPointerException("missing account");
+            throw new NullPointerException("missing campaign");
         ContentValues values = toContentValue(campaign);
         return db.insert(CAMPAIGNS_TABLE, null, values);
     }
     public long insert(ShoppingItem item) throws SQLiteException,NullPointerException{
         if(item == null)
-            throw new NullPointerException("missing account");
+            throw new NullPointerException("missing item");
         ContentValues values = toContentValue(item);
         return db.insert(SHOPPING_ITEMS_TABLE, null, values);
     }
@@ -96,6 +96,7 @@ public class DBManager{
         if(social == null)
             throw new NullPointerException("missing account");
         ContentValues values = new ContentValues();
+        values.put(ID, social.getId());
         values.put(LOGO, getBytes(social.getLogo()));
         values.put(NAME, social.getName());
         return values;
@@ -127,10 +128,10 @@ public class DBManager{
         while (!cursor.isAfterLast()) {		//finche' non arrivo alla fine
             String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
+            long socialType = cursor.getLong(cursor.getColumnIndex(DBManager.ID));
 
-            Social newSocial = new Social(logo,name);	//creo l' account
+            Social newSocial = new Social(socialType,logo,name);	//creo l' account
 
-            newSocial.setId(cursor.getLong(cursor.getColumnIndex(DBManager.ID)));	//gli setto l'id
             list.add(0,newSocial);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
         }
@@ -211,6 +212,9 @@ public class DBManager{
         }
 
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) throws SQLiteException{
+            db.execSQL("drop table if exists "+SOCIALS_TABLE+";");
+            db.execSQL("drop table if exists "+SHOPPING_ITEMS_TABLE+";");
+            db.execSQL("drop table if exists "+CAMPAIGNS_TABLE+";");
             onCreate(db);
         }
     }

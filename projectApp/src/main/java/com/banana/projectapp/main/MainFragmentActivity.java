@@ -75,36 +75,34 @@ public class MainFragmentActivity extends ActionBarActivity implements
 	public void onNavigationDrawerItemSelected(int position) {
 		// update the main content by replacing fragments
 		FragmentManager fragmentManager = getSupportFragmentManager();
-        String email = (String) getIntent().getExtras().get("email");
-		Log.e("aaa", "lancio il fragment con email = "+ email);
 		if (position==0){
 			fragmentManager
 			.beginTransaction()
 			.replace(R.id.container,
-					CampagneFragment.newInstance(email)).commit();
+					CampagneFragment.newInstance()).commit();
 		} else if (position==1){
 			fragmentManager
 			.beginTransaction()
 			.replace(R.id.container,
-					ShoppingFragment.newInstance(email)).commit();
+					ShoppingFragment.newInstance()).commit();
 		} else if (position==2){
 			fragmentManager
 				.beginTransaction()
 				.replace(R.id.container,
-						ProfileFragment.newInstance(email)).commit();
+						ProfileFragment.newInstance()).commit();
 		} else if (position==3){
 
             if (userLogoutTask!=null){
                 return;
             }
 
-            userLogoutTask = new UserLogoutTask(email);
+            userLogoutTask = new UserLogoutTask(DataHolder.getEmail());
             userLogoutTask.execute((Void) null);
 
         }
 	}
 
-	public void onSectionAttached(int number) {
+    public void onSectionAttached(int number) {
 		switch (number) {
 		case 1:
 			mTitle = getString(R.string.title_section1);
@@ -207,12 +205,12 @@ public class MainFragmentActivity extends ActionBarActivity implements
                 userInvalid.printStackTrace();
             }
 
-            //todo mettere return false e restituire vero solo se il logout ha successo
             return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
+            DataHolder.setToken(null);
             userLogoutTask = null;
             if (success){
                 Intent intent = new Intent(MainFragmentActivity.this,LoginActivity.class);

@@ -1,12 +1,7 @@
 package com.banana.projectapp.profile;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.banana.projectapp.DataHolder;
@@ -15,46 +10,72 @@ import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.exception.SocialAccountInvalid;
-import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.UserInvalid;
+import com.banana.projectapp.main.LoginActivity;
 import com.banana.projectapp.main.MainFragmentActivity;
+import com.banana.projectapp.social.ChooseSocial;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.InputType;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class ProfileFragment extends Fragment{
 
-    static List<Bitmap> result = new ArrayList<>();
-	SocialAdapter adapter;
+//    static List<Bitmap> result = new ArrayList<>();
+    SocialAdapter adapter;
 	ListView list;
-	String email;
     private ClientStub client;
+    TextView nome;
+    TextView email;
 
-    DownloadSocialsImagesTask socialsImagesTask;
+//    DownloadSocialsImagesTask socialsImagesTask;
     ChangeMailTask changeMailTask;
     ChangePasswordTask changePasswordTask;
     DeleteSocialTask deleteSocialTask;
-    AddSocialTask addSocialTask;
+
     DeleteAccountTask deleteAccountTask;
 
     private List<Social> socials;
-	
-	public static ProfileFragment newInstance(String email) {
+
+    public void updateView(){
+
+        DBManager db = new DBManager(getActivity()).open();
+        socials = db.getSocials();
+        db.close();
+
+        adapter = new com.banana.projectapp.profile.SocialAdapter(getActivity(), socials);
+        list.setAdapter(adapter);
+
+        adapter.notifyDataSetChanged();
+        Log.e("ciao","notify "+ socials.size());
+    }
+
+    public void onActivityResult(int a, int b, Intent i){
+        Log.e("ciao","on activity result");
+        updateView();
+    }
+
+	public static ProfileFragment newInstance() {
 		ProfileFragment fragment = new ProfileFragment();
-		fragment.email = email;
 		return fragment;
 	}
 
@@ -68,10 +89,14 @@ public class ProfileFragment extends Fragment{
         }
     }
 
+    public void onResume(){
+        super.onResume();
+    }
+
     @Override
     public void onDestroy(){
-        if (socialsImagesTask!= null)
-            socialsImagesTask.cancel(true);
+//        if (socialsImagesTask!= null)
+//            socialsImagesTask.cancel(true);
         if (changeMailTask!= null)
             changeMailTask.cancel(true);
         if (changePasswordTask!= null)
@@ -80,8 +105,7 @@ public class ProfileFragment extends Fragment{
             deleteAccountTask.cancel(true);
         if (deleteSocialTask!= null)
             deleteSocialTask.cancel(true);
-        if (addSocialTask!=null)
-            addSocialTask.cancel(true);
+
         super.onDestroy();
     }
 
@@ -90,19 +114,43 @@ public class ProfileFragment extends Fragment{
 			Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.profilo, container,
 				false);
-		TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
-		nome.setText(email);
+		nome = (TextView) rootView.findViewById(R.id.nome_utente);
+		nome.setText(DataHolder.getEmail());
 		nome.invalidate();
+        email = (TextView) rootView.findViewById(R.id.email);
+        email.setText(DataHolder.getEmail());
+        email.invalidate();
 
         final Button change_mail = (Button) rootView.findViewById(R.id.change_email);
         change_mail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (changeMailTask != null){
-                    return;
+            if (changeMailTask != null){
+                return;
+            }
+
+            AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+
+            alert.setTitle("Change email");
+            alert.setMessage("please enter your new email");
+
+            final EditText input = new EditText(getActivity());
+            alert.setView(input);
+
+            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    String newMail = input.getText().toString();
+                    changeMailTask = new ChangeMailTask(newMail);
+                    changeMailTask.execute((Void) null);
                 }
-                changeMailTask = new ChangeMailTask(email);
-                changeMailTask.execute((Void) null);
+            });
+
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                }
+            });
+
+            alert.show();
             }
         });
 
@@ -113,8 +161,49 @@ public class ProfileFragment extends Fragment{
                 if (changePasswordTask != null){
                     return;
                 }
-                changePasswordTask = new ChangePasswordTask(email);
-                changePasswordTask.execute((Void) null);
+
+                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+
+                alert.setTitle("Change Password");
+                alert.setMessage("please enter your new password");
+
+                LinearLayout layout = new LinearLayout(getActivity());
+                layout.setOrientation(LinearLayout.VERTICAL);
+
+                final EditText password1 = new EditText(getActivity());
+                password1.setHint("password");
+                password1.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                password1.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                layout.addView(password1);
+
+                final EditText password2 = new EditText(getActivity());
+                password2.setHint("re-enter password");
+                password2.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                password2.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                layout.addView(password2);
+
+                alert.setView(layout);
+
+                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        String str1 = password1.getText().toString();
+                        String str2 = password2.getText().toString();
+
+                        if (str1.equals(str2)) {
+                            changePasswordTask = new ChangePasswordTask(str1);
+                            changePasswordTask.execute((Void) null);
+                        } else {
+                            Toast.makeText(getActivity(),"passwords must be equals",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                    }
+                });
+
+                alert.show();
             }
         });
 
@@ -122,63 +211,60 @@ public class ProfileFragment extends Fragment{
         addSocial.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (addSocialTask != null){
-                    return;
-                }
 
-                //TODO
-                int socialType = 0;
-                String socialToken = "a";
-                addSocialTask = new AddSocialTask(socialType, socialToken);
-                changePasswordTask.execute((Void) null);
+                Intent intent = new Intent(getActivity(), ChooseSocial.class);
+                startActivityForResult(intent, 1);
+
+
             }
         });
 
         final Button removeAccount = (Button) rootView.findViewById(R.id.removeAccount);
+        final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        if (deleteAccountTask != null){
+                            return;
+                        }
+                        deleteAccountTask = new DeleteAccountTask(DataHolder.getEmail());
+                        deleteAccountTask.execute((Void) null);
+                        break;
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        break;
+                }
+            }
+        };
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         removeAccount.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (deleteAccountTask != null){
-                    return;
-                }
-                deleteAccountTask = new DeleteAccountTask(email);
-                deleteAccountTask.execute((Void) null);
+            public void onClick(View view) {
+
+                builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
+
             }
         });
 
 		list = (ListView) rootView.findViewById(R.id.list_view);
-		URL[] urls = new URL[2];
- 		try {
- 			urls[0]=new URL("http://3.bp.blogspot.com/-z4r06pZa54g/VBzoCWVdoPI/AAAAAAAAAPg/aAQ0MoaBKnc/s1600/facebook_logo.png");
- 			urls[1]=new URL("https://cdn.serinus42.com/2a90baa3fb5ed8c/uploads/c/300/7f58d/twitter-logo_17.png");
- 		} catch (MalformedURLException e) {
- 			e.printStackTrace();
- 		}
 
         DBManager db = new DBManager(getActivity()).open();
         socials = db.getSocials();
         db.close();
 
-        if (socials.size() < 2){
-            Toast.makeText(getActivity(),"nessun social in db, le scarico e le inserisco",Toast.LENGTH_SHORT).show();
+        adapter = new com.banana.projectapp.profile.SocialAdapter(getActivity(), socials);
+        list.setAdapter(adapter);
 
-            if (socialsImagesTask != null)
-                return rootView;
-            socialsImagesTask = new DownloadSocialsImagesTask();
-            socialsImagesTask.execute(urls);
-        } else {
-            adapter = new com.banana.projectapp.profile.SocialAdapter(getActivity(), socials);
-            list.setAdapter(adapter);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                    int position, long id) {
+                Toast.makeText(getActivity(), socials.get(position).getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
-                    Toast.makeText(getActivity(), socials.get(position).getName(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
         return rootView;
 	}
 
@@ -205,17 +291,25 @@ public class ProfileFragment extends Fragment{
                     String ember_token = DataHolder.getToken();
                     client.changeEmail(mEmail, ember_token);
                 }
-                return true;
             } catch (UserInvalid | EmberTokenInvalid | IOException userInvalid) {
                 userInvalid.printStackTrace();
             }
 
-            return true;
+            return LoginActivity.isEmailValid(mEmail);
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
             changeMailTask = null;
+            if (success) {
+                DataHolder.setEmail(mEmail);
+                nome.setText(DataHolder.getEmail());
+                nome.invalidate();
+                email.setText(DataHolder.getEmail());
+                email.invalidate();
+            } else {
+                Toast.makeText(getActivity(),"sorry, email is not valid",Toast.LENGTH_SHORT).show();
+            }
         }
 
         @Override
@@ -288,6 +382,9 @@ public class ProfileFragment extends Fragment{
         @Override
         protected void onPostExecute(final Boolean success) {
             deleteAccountTask = null;
+            DataHolder.setToken(null);
+            Intent intent = new Intent(getActivity(),LoginActivity.class);
+            startActivity(intent);
         }
 
         @Override
@@ -323,109 +420,20 @@ public class ProfileFragment extends Fragment{
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            deleteSocialTask = null;
-        }
-
-        @Override
-        protected void onCancelled() {
-            deleteSocialTask = null;
-            super.onCancelled();
-        }
-    }
-
-    private class AddSocialTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final int mSocialType;
-        private final String mSocialToken;
-
-        AddSocialTask(int socialType, String socialToken) {
-            mSocialType = socialType;
-            mSocialToken = socialToken;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-
-            try {
-                if (DataHolder.testing) {
-                    String ember_token = DataHolder.getToken();
-                    client.addSocial(mSocialType, mSocialToken, ember_token);
-                }
-                return true;
-            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid | SocialAccountTokenInvalid e) {
-                e.printStackTrace();
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            addSocialTask = null;
-        }
-
-        @Override
-        protected void onCancelled() {
-            addSocialTask = null;
-            super.onCancelled();
-        }
-    }
-
-    private class DownloadSocialsImagesTask extends AsyncTask<URL, Integer, Long> {
-        public Long doInBackground(URL... urls) {
-            long totalSize = 0;
-            for (URL url : urls) {
-                HttpURLConnection connection;
-                try {
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setDoInput(true);
-                    connection.connect();
-                    InputStream input;
-                    input = connection.getInputStream();
-                    result.add(BitmapFactory.decodeStream(input));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Log.e("aaa", "caricata immagine dal link " + url);
-            }
-            return totalSize;
-        }
-
-        protected void onProgressUpdate(Integer... progress) {
-        }
-        @Override
-        protected void onCancelled() {
-            Log.i("aa","task cancellato");
-            super.onCancelled();
-        }
-        protected void onPostExecute(Long a) {
-
-            DBManager db = new DBManager(getActivity()).open();
-            db.insert(new Social(result.get(0),
-                    "facebook"));
-            db.insert(new Social(result.get(1),
-                    "twitter"));
+            DBManager db = new DBManager(getActivity());
+            db.open();
+            db.remove(mSocialType, "SOCIALS");
             socials = db.getSocials();
-
-             /*
-	    	final List<Social> socials = new ArrayList<Social>();
-	 		socials.add(new Social(result.get(0),
-	 				"facebook"));
-	 		socials.add(new Social(result.get(1),
-	 				"twitter"));
-	 		*/
-            adapter = new com.banana.projectapp.profile.SocialAdapter(getActivity(), socials);
-            list.setAdapter(adapter);
-
-            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
-                    Toast.makeText(getActivity(), socials.get(position).getName(), Toast.LENGTH_SHORT).show();
-                }
-            });
+            adapter.notifyDataSetChanged();
             db.close();
+            deleteSocialTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+
+            deleteSocialTask = null;
+            super.onCancelled();
         }
     }
 }

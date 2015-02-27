@@ -1,4 +1,4 @@
-package com.banana.projectapp;
+package com.banana.projectapp.social;
 
 import java.util.ArrayList;
 
@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+
+import com.banana.projectapp.R;
 
 public class PhotosGridAdapter extends BaseAdapter {
 	private Context mContext;

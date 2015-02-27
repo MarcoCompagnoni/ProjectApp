@@ -1,4 +1,4 @@
-package com.banana.projectapp;
+package com.banana.projectapp.social;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +27,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.banana.projectapp.DataHolder;
+import com.banana.projectapp.R;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.EmberTokenInvalid;
@@ -40,7 +42,6 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.widget.LoginButton;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -99,7 +100,7 @@ public class FacebookPhotos extends ActionBarActivity {
             e.printStackTrace();
         }
 
-        setupLogin();
+        //setupLogin();
 	    setupGridAdapter();
         setupListAdapter();
 	    setupPhotoButton();

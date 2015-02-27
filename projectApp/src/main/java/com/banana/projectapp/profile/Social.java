@@ -6,7 +6,8 @@ public class Social {
     private long id = -1;
 	private Bitmap logo;
 	private String name;
-	public Social(Bitmap logo, String name){
+	public Social(long socialType, Bitmap logo, String name){
+        this.setId(socialType);
 		this.setLogo(logo);
 		this.setName(name);
 	}

@@ -12,12 +12,9 @@ import java.util.List;
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
-import com.banana.projectapp.FacebookPhotos;
+import com.banana.projectapp.social.FacebookPhotos;
 import com.banana.projectapp.R;
-import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.EmberTokenInvalid;
-import com.banana.projectapp.exception.PhotoInvalid;
-import com.banana.projectapp.exception.SocialAccountInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 
 import android.app.Activity;
@@ -42,16 +39,14 @@ public class CampagneFragment extends Fragment {
     static List<Bitmap> result = new ArrayList<>();
 	com.banana.projectapp.campagne.CampaignAdapter adapter;
 	ListView list;
-	String email;
     ClientStub client;
     DownloadCompaniesImagesTask companiesImagesTask;
     SynchronizeCampaignTask synchronizeCampaignTask;
 
     private List<CompanyCampaign> campaigns;
 
-    public static CampagneFragment newInstance(String email) {
+    public static CampagneFragment newInstance() {
 		CampagneFragment fragment = new CampagneFragment();
-		fragment.email = email;
 		return fragment;
 	}
 
@@ -81,8 +76,8 @@ public class CampagneFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.campagne, container,
                 false);
         TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
-        nome.setText(email);
-        Log.e("ciao", "email = " + email);
+        nome.setText(DataHolder.getEmail());
+        Log.e("","email = "+DataHolder.getEmail());
         nome.invalidate();
 
         final Button synchronizeCampaign = (Button) rootView.findViewById(R.id.synchronizeCampaign);

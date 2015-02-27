@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -136,7 +137,7 @@ public class LoginActivity extends ActionBarActivity {
 		}
 	}
 
-	private boolean isEmailValid(String email) {
+	public static boolean isEmailValid(String email) {
 		return email.contains("@");
 	}
 
@@ -199,6 +200,8 @@ public class LoginActivity extends ActionBarActivity {
                     String token = client.login(mEmail, mPassword);
                     DataHolder.setToken(token);
                 }
+
+                DataHolder.setEmail(mEmail);
                 return true;
             } catch (IOException | ActivationNeeded | AuthenticationFailure | UserInvalid e) {
                 e.printStackTrace();

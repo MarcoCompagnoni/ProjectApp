@@ -41,7 +41,6 @@ public class ShoppingFragment extends Fragment{
     static List<Bitmap> result = new ArrayList<>();
 	ShoppingAdapter adapter;
 	ListView list;
-	String email;
     ClientStub client;
     DownloadShoppingImagesTask shoppingImagesTask;
     SynchronizeCouponsTask synchronizeCouponsTask;
@@ -49,9 +48,8 @@ public class ShoppingFragment extends Fragment{
 
     private List<ShoppingItem> items;
 	
-	public static ShoppingFragment newInstance(String email) {
+	public static ShoppingFragment newInstance() {
 		ShoppingFragment fragment = new ShoppingFragment();
-		fragment.email = email;
 		return fragment;
 	}
 
@@ -82,7 +80,7 @@ public class ShoppingFragment extends Fragment{
 		View rootView = inflater.inflate(R.layout.shopping, container,
 				false);
 		TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
-		nome.setText(email);
+		nome.setText(DataHolder.getEmail());
 		nome.invalidate();
 
         final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);

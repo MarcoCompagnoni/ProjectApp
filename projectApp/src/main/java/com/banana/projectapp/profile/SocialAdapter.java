@@ -8,13 +8,17 @@ import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
 import com.banana.projectapp.R.id;
 import com.banana.projectapp.communication.ClientStub;
+import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.exception.SocialAccountInvalid;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -25,8 +29,12 @@ public class SocialAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
 	List<Social> socials;
     ClientStub client;
+    Context context;
+    DeleteSocialTask deleteSocialTask;
+
 	
 	public SocialAdapter(Context context, List<Social> socials) {
+        this.context = context;
 		mInflater = LayoutInflater.from(context);
 		this.socials = socials;
         try {
@@ -74,12 +82,12 @@ public class SocialAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 Toast.makeText(v.getContext(),"rimuovo "+social.getName(),Toast.LENGTH_SHORT).show();
-                try {
-                    if (DataHolder.testing)
-                        client.deleteSocial((int)social.getId(), DataHolder.getToken());
-                } catch (EmberTokenInvalid | SocialAccountInvalid | IOException emberTokenInvalid) {
-                    emberTokenInvalid.printStackTrace();
+                if (deleteSocialTask!=null) {
+                    return;
                 }
+                deleteSocialTask = new DeleteSocialTask((int)social.getId());
+                deleteSocialTask.execute((Void)null);
+
             }
         });
 
@@ -91,4 +99,48 @@ public class SocialAdapter extends BaseAdapter {
 		public TextView name;
         public Button button;
 	}
+
+    private class DeleteSocialTask extends AsyncTask<Void, Void, Boolean> {
+
+        private final int mSocialType;
+
+        DeleteSocialTask(int socialType) {
+            mSocialType = socialType;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getToken();
+                    client.deleteSocial(mSocialType, ember_token);
+                }
+                return true;
+            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid e) {
+                e.printStackTrace();
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            DBManager db = new DBManager(context);
+            db.open();
+            db.remove(mSocialType,"SOCIALS");
+            socials = db.getSocials();
+            db.close();
+            notifyDataSetChanged();
+            deleteSocialTask = null;
+        }
+
+        @Override
+        protected void onCancelled() {
+
+            deleteSocialTask = null;
+            super.onCancelled();
+        }
+    }
+
 }
