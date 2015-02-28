@@ -2,7 +2,7 @@ package com.banana.projectapp.main;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
-import com.banana.projectapp.campagne.CampagneFragment;
+import com.banana.projectapp.campagne.CampaignFragment;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.profile.ProfileFragment;
@@ -16,7 +16,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -79,7 +78,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
 			fragmentManager
 			.beginTransaction()
 			.replace(R.id.container,
-					CampagneFragment.newInstance()).commit();
+					CampaignFragment.newInstance()).commit();
 		} else if (position==1){
 			fragmentManager
 			.beginTransaction()
@@ -141,7 +140,8 @@ public class MainFragmentActivity extends ActionBarActivity implements
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
+
+		//int id = item.getItemId();
         //return id == R.id.action_settings || super.onOptionsItemSelected(item);
         return super.onOptionsItemSelected(item);
     }

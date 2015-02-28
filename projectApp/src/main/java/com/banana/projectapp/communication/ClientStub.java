@@ -399,7 +399,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void synchronizeCampaigns(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
+    public String synchronizeCampaigns(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
 
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
 
@@ -414,7 +414,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
                         Object result = in.readObject();
                         if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
                         else if (result instanceof String) {
-                            String campaign_json = (String) result;
+                            return (String) result;
                         } else { throw new IOException("input/output error"); }
 
                     } catch (ClassNotFoundException e) {
@@ -474,7 +474,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void synchronizeCoupons(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
+    public String synchronizeCoupons(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
 
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
 
@@ -488,7 +488,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
                         Object result = in.readObject();
                         if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
                         else if (result instanceof String) {
-                            String coupon_json = (String) result;
+                            return (String) result;
                         } else { throw new IOException("input/output error"); }
 
                     } catch (ClassNotFoundException e) {

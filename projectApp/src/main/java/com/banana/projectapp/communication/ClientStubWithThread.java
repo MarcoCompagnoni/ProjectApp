@@ -14,6 +14,8 @@ import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.exception.MailException;
 
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -429,7 +431,7 @@ public class ClientStubWithThread implements CommunicationProfileInterface, Comm
     }
 
     @Override
-    public void synchronizeCampaigns(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
+    public String synchronizeCampaigns(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
 
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
 
@@ -465,6 +467,7 @@ public class ClientStubWithThread implements CommunicationProfileInterface, Comm
             }
         });
         t.start();
+        return null;
     }
 
     @Override
@@ -518,7 +521,7 @@ public class ClientStubWithThread implements CommunicationProfileInterface, Comm
     }
 
     @Override
-    public void synchronizeCoupons(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
+    public String synchronizeCoupons(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
 
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
 
@@ -554,6 +557,7 @@ public class ClientStubWithThread implements CommunicationProfileInterface, Comm
             }
         });
         t.start();
+        return null;
     }
 
     @Override

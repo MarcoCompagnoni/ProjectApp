@@ -20,8 +20,6 @@ import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.exception.SocialAccountInvalid;
 import com.banana.projectapp.exception.SocialAccountTokenInvalid;
-import com.banana.projectapp.main.MainFragmentActivity;
-import com.banana.projectapp.profile.ProfileFragment;
 import com.banana.projectapp.profile.Social;
 import com.facebook.Session;
 import com.facebook.SessionLoginBehavior;

@@ -17,10 +17,8 @@ import com.banana.projectapp.social.ChooseSocial;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -75,8 +73,7 @@ public class ProfileFragment extends Fragment{
     }
 
 	public static ProfileFragment newInstance() {
-		ProfileFragment fragment = new ProfileFragment();
-		return fragment;
+		return new ProfileFragment();
 	}
 
 	@Override

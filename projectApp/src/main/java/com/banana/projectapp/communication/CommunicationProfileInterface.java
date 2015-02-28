@@ -11,7 +11,7 @@ import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 
 import java.io.IOException;
 
-    public interface CommunicationProfileInterface {
+public interface CommunicationProfileInterface {
 
     void registration(String email, String password)
             throws NullPointerException, EmailDuplicate, MailException, IOException;

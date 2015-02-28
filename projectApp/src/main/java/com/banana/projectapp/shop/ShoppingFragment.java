@@ -1,9 +1,10 @@
 package com.banana.projectapp.shop;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -15,14 +16,11 @@ import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.CouponInvalid;
 import com.banana.projectapp.exception.EmberTokenInvalid;
-import com.banana.projectapp.exception.SocialAccountInvalid;
-import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,23 +33,37 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ShoppingFragment extends Fragment{
-    static List<Bitmap> result = new ArrayList<>();
+
 	ShoppingAdapter adapter;
 	ListView list;
     ClientStub client;
-    DownloadShoppingImagesTask shoppingImagesTask;
     SynchronizeCouponsTask synchronizeCouponsTask;
     RequestCouponTask requestCouponTask;
 
-    private List<ShoppingItem> items;
+    String coupon_json;
+    private List<ShoppingItem> coupons;
 	
 	public static ShoppingFragment newInstance() {
-		ShoppingFragment fragment = new ShoppingFragment();
-		return fragment;
+		return new ShoppingFragment();
 	}
+
+    public void updateView(){
+
+        DBManager db = new DBManager(getActivity()).open();
+        coupons = db.getShoppingItems();
+        db.close();
+
+        adapter = new ShoppingAdapter(getActivity(), coupons);
+        list.setAdapter(adapter);
+
+        adapter.notifyDataSetChanged();
+    }
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,8 +77,6 @@ public class ShoppingFragment extends Fragment{
 
     @Override
     public void onDestroy(){
-        if (shoppingImagesTask!= null)
-            shoppingImagesTask.cancel(true);
         if (requestCouponTask != null)
             requestCouponTask.cancel(true);
         if (synchronizeCouponsTask != null)
@@ -97,38 +107,13 @@ public class ShoppingFragment extends Fragment{
         });
 
 		list = (ListView) rootView.findViewById(R.id.list_view);
-		URL[] urls = new URL[4];
- 		try {
- 			urls[0]=new URL("http://news.dice.com/wp-content/uploads/2013/10/amazon-1.png");
- 			urls[1]=new URL("http://www.logodesignlove.com/images/evolution/ebay-logo-02.jpg");
- 			urls[2]=new URL("http://fontmeme.com/images/Paypal-Logo.jpg");
- 			urls[3]=new URL("http://screenwerk.com/wpn/media/Screen-Shot-2013-02-27-at-1.37.14-PM.png");
- 		} catch (MalformedURLException e) {
- 			e.printStackTrace();
- 		}
 
         DBManager db = new DBManager(getActivity()).open();
-        items = db.getShoppingItems();
+        coupons = db.getShoppingItems();
         db.close();
-        if (items.size() < 4){
-            Toast.makeText(getActivity(),"nessun item in db, le scarico e le inserisco",Toast.LENGTH_SHORT).show();
-            if (shoppingImagesTask != null)
-                return rootView;
-            shoppingImagesTask = new DownloadShoppingImagesTask();
-            shoppingImagesTask.execute(urls);
-        } else {
-            adapter = new ShoppingAdapter(getActivity(), items);
-            list.setAdapter(adapter);
 
-            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
-                    Toast.makeText(getActivity(), items.get(position).getName(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+        adapter = new ShoppingAdapter(getActivity(), coupons);
+        list.setAdapter(adapter);
 
         final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
             @Override
@@ -172,6 +157,8 @@ public class ShoppingFragment extends Fragment{
 
     private class SynchronizeCouponsTask extends AsyncTask<Void, Void, Boolean> {
 
+        ArrayList<ShoppingItem> couponList = new ArrayList<>();
+
         SynchronizeCouponsTask() {}
 
         @Override
@@ -180,18 +167,59 @@ public class ShoppingFragment extends Fragment{
             try {
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
-                    client.synchronizeCoupons(ember_token);
+                    coupon_json = client.synchronizeCoupons(ember_token);
+                } else {
+                    InputStream inputStream = getResources().openRawResource(R.raw.coupons);
+                    BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder total = new StringBuilder();
+                    String line;
+                    while ((line = r.readLine()) != null) {
+                        total.append(line);
+                    }
+                    coupon_json = total.toString();
+                    JSONObject o = new JSONObject(coupon_json);
+                    JSONArray aa = o.getJSONArray("data");
+                    int number_of_coupons = aa.length();
+                    for (int i=0; i<number_of_coupons;i++){
+                        JSONObject obj = aa.getJSONObject(i);
+                        ShoppingItem s = new ShoppingItem(
+                                obj.getLong("id"),
+                                obj.getString("url"),
+                                obj.getString("coupon"),
+                                obj.getInt("credits"));
+                        couponList.add(s);
+                    }
                 }
-                return true;
-            } catch (IOException | EmberTokenInvalid e) {
+            } catch (IOException | EmberTokenInvalid | JSONException e) {
                 e.printStackTrace();
             }
-
+            for (ShoppingItem s : couponList) {
+                HttpURLConnection connection;
+                try {
+                    connection = (HttpURLConnection) new URL(s.getUrl()).openConnection();
+                    connection.setDoInput(true);
+                    connection.connect();
+                    InputStream input;
+                    input = connection.getInputStream();
+                    s.setLogo(BitmapFactory.decodeStream(input));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Log.e("aaa", "caricata immagine dal link " + s.getUrl());
+            }
             return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
+            DBManager db = new DBManager(getActivity()).open();
+            db.deleteShoppingItems();
+            for (ShoppingItem s: couponList){
+                db.insert(s);
+            }
+            db.close();
+
+            updateView();
             synchronizeCouponsTask = null;
         }
 
@@ -234,75 +262,6 @@ public class ShoppingFragment extends Fragment{
         protected void onCancelled() {
             requestCouponTask = null;
             super.onCancelled();
-        }
-    }
-
-    private class DownloadShoppingImagesTask extends AsyncTask<URL, Integer, Long> {
-        public Long doInBackground(URL... urls) {
-            int count = urls.length;
-            long totalSize = 0;
-            for (int i = 0; i < count && !isCancelled(); i++) {
-                URL url = urls[i];
-                HttpURLConnection connection;
-                try {
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setDoInput(true);
-                    connection.connect();
-                    InputStream input;
-                    input = connection.getInputStream();
-                    result.add(BitmapFactory.decodeStream(input));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Log.e("aaa", "caricata immagine dal link "+urls[i]);
-            }
-            return totalSize;
-        }
-
-        protected void onProgressUpdate(Integer... progress) {
-        }
-
-        @Override
-        protected void onCancelled() {
-            Log.i("aa","task cancellato");
-            super.onCancelled();
-        }
-
-        protected void onPostExecute(Long a) {
-
-            DBManager db = new DBManager(getActivity()).open();
-            db.insert(new ShoppingItem(result.get(0),
-                    "amazon", 70));
-            db.insert(new ShoppingItem(result.get(1),
-                    "ebay", 30));
-            db.insert(new ShoppingItem(result.get(2),
-                    "paypal", 50));
-            db.insert(new ShoppingItem(result.get(3),
-                    "groupon", 120));
-            items = db.getShoppingItems();
-
-	    	/*final List<ShoppingItem> items = new ArrayList<ShoppingItem>();
-	 		items.add(new ShoppingItem(result.get(0),
-	 				"amazon", 70));
-	 		items.add(new ShoppingItem(result.get(1),
-	 				"ebay", 30));
-	 		items.add(new ShoppingItem(result.get(2),
-	 				"paypal", 50));
-	 		items.add(new ShoppingItem(result.get(3),
-	 				"groupon", 120));
-	 		*/
-
-            adapter = new com.banana.projectapp.shop.ShoppingAdapter(getActivity(), items);
-            list.setAdapter(adapter);
-
-            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
-                    Toast.makeText(getActivity(), items.get(position).getName(), Toast.LENGTH_SHORT).show();
-                }
-            });
         }
     }
 }

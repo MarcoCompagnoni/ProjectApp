@@ -3,7 +3,7 @@ package com.banana.projectapp.profile;
 import android.graphics.Bitmap;
 
 public class Social {
-    private long id = -1;
+    private long id;
 	private Bitmap logo;
 	private String name;
 	public Social(long socialType, Bitmap logo, String name){

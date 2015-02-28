@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.banana.projectapp.campagne.CompanyCampaign;
 import com.banana.projectapp.profile.Social;
@@ -21,13 +22,14 @@ import com.banana.projectapp.shop.ShoppingItem;
 public class DBManager{
 
     public static final String DATABASE_NAME = "FRIENZ.db";
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 5;
 
     public static final String CAMPAIGNS_TABLE = "CAMPAIGNS";
     public static final String SOCIALS_TABLE = "SOCIALS";
     public static final String SHOPPING_ITEMS_TABLE = "SHOPPING_ITEMS";
 
     public static final String ID = "_id";
+    public static final String URL = "url";
     public static final String LOGO = "logo";
     public static final String NAME = "name";
     public static final String CREDITS = "credits";
@@ -78,6 +80,8 @@ public class DBManager{
         if(campaign == null)
             throw new NullPointerException("missing account");
         ContentValues values = new ContentValues();
+        values.put(ID, campaign.getId());
+        values.put(URL, campaign.getUrl());
         values.put(LOGO, getBytes(campaign.getLogo()));
         values.put(NAME, campaign.getName());
         values.put(CREDITS, campaign.getCredits());
@@ -87,6 +91,8 @@ public class DBManager{
         if(item == null)
             throw new NullPointerException("missing account");
         ContentValues values = new ContentValues();
+        values.put(ID, item.getId());
+        values.put(URL, item.getUrl());
         values.put(LOGO, getBytes(item.getLogo()));
         values.put(NAME, item.getName());
         values.put(CREDITS, item.getCredits());
@@ -112,9 +118,16 @@ public class DBManager{
     }
 */
 
-    public void remove(long idx, String table) throws SQLiteException{
-        if(db.delete(table, ID + "=" + idx, null) <= 0)
-            throw new SQLiteException();
+    public int remove(long idx, String table) throws SQLiteException{
+        return db.delete(table, ID + "=" + idx, null);
+    }
+
+    public int deleteCampaigns() throws SQLiteException{
+        return db.delete(DBManager.CAMPAIGNS_TABLE, "1=1", null);
+    }
+
+    public int deleteShoppingItems() throws SQLiteException{
+        return db.delete(DBManager.SHOPPING_ITEMS_TABLE, "1=1", null);
     }
 
     private Cursor getAllEntries(String table) throws SQLiteException{
@@ -143,13 +156,14 @@ public class DBManager{
         ArrayList<CompanyCampaign> list = new ArrayList<>();
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {		//finche' non arrivo alla fine
+            long id = cursor.getLong(cursor.getColumnIndex(DBManager.ID));
             String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
+            String url = cursor.getString(cursor.getColumnIndex(DBManager.URL));
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
             int credits = cursor.getInt(cursor.getColumnIndex(DBManager.CREDITS));
 
-            CompanyCampaign newCampaign = new CompanyCampaign(logo,name,credits);	//creo l' account
+            CompanyCampaign newCampaign = new CompanyCampaign(id, url, logo, name, credits);	//creo l' account
 
-            newCampaign.setId(cursor.getLong(cursor.getColumnIndex(DBManager.ID)));	//gli setto l'id
             list.add(0,newCampaign);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
         }
@@ -161,13 +175,14 @@ public class DBManager{
         ArrayList<ShoppingItem> list = new ArrayList<>();
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {		//finche' non arrivo alla fine
+            long id = cursor.getLong(cursor.getColumnIndex(DBManager.ID));
+            String url = cursor.getString(cursor.getColumnIndex(DBManager.URL));
             String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
             int credits = cursor.getInt(cursor.getColumnIndex(DBManager.CREDITS));
 
-            ShoppingItem newItem = new ShoppingItem(logo,name,credits);	//creo l' account
+            ShoppingItem newItem = new ShoppingItem(id, url, logo, name, credits);	//creo l' account
 
-            newItem.setId(cursor.getLong(cursor.getColumnIndex(DBManager.ID)));	//gli setto l'id
             list.add(0,newItem);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
         }
@@ -187,19 +202,21 @@ public class DBManager{
 
         private static final String SQL_CREATE_TABLE_CAMPAIGNS = "create table "
                 + CAMPAIGNS_TABLE + " (" //
-                + ID + " integer primary key autoincrement, "
+                + ID + " integer primary key, "
+                + URL + " text not null, "
                 + NAME + " text not null, "
                 + LOGO + " blob not null, "
                 + CREDITS + " text not null);";
         private static final String SQL_CREATE_TABLE_SHOPPING_ITEMS = "create table "
                 + SHOPPING_ITEMS_TABLE + " (" //
-                + ID + " integer primary key autoincrement, "
+                + ID + " integer primary key, "
+                + URL + " text not null,"
                 + NAME + " text not null, "
                 + LOGO + " blob not null, "
                 + CREDITS + " text not null);";
         private static final String SQL_CREATE_TABLE_SOCIALS = "create table "
                 + SOCIALS_TABLE + " (" //
-                + ID + " integer primary key autoincrement, "
+                + ID + " integer primary key, "
                 + NAME + " text not null, "
                 + LOGO + " blob not null);";
 
@@ -208,6 +225,7 @@ public class DBManager{
             db.execSQL(SQL_CREATE_TABLE_CAMPAIGNS);
             db.execSQL(SQL_CREATE_TABLE_SOCIALS);
             db.execSQL(SQL_CREATE_TABLE_SHOPPING_ITEMS);
+            Log.i("","create tabelle");
 
         }
 
@@ -215,8 +233,18 @@ public class DBManager{
             db.execSQL("drop table if exists "+SOCIALS_TABLE+";");
             db.execSQL("drop table if exists "+SHOPPING_ITEMS_TABLE+";");
             db.execSQL("drop table if exists "+CAMPAIGNS_TABLE+";");
+            Log.i("","droppate tabelle");
             onCreate(db);
         }
+
+        public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) throws SQLiteException{
+            db.execSQL("drop table if exists "+SOCIALS_TABLE+";");
+            db.execSQL("drop table if exists "+SHOPPING_ITEMS_TABLE+";");
+            db.execSQL("drop table if exists "+CAMPAIGNS_TABLE+";");
+            Log.i("","droppate tabelle");
+            onCreate(db);
+        }
+
     }
     public static byte[] getBytes(Bitmap bitmap)
     {

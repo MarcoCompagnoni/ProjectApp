@@ -1,7 +1,5 @@
 package com.banana.projectapp;
 
-import android.app.Application;
-
 public class DataHolder {
 
     public class SocialType{

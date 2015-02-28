@@ -6,17 +6,20 @@ import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.exception.PhotoInvalid;
 import com.banana.projectapp.exception.SocialAccountInvalid;
 
+import org.json.JSONObject;
+
+import java.io.File;
 import java.io.IOException;
 
 public interface CommunicationCommercialInterface {
 
-    void synchronizeCampaigns(String ember_token)
+    String synchronizeCampaigns(String ember_token)
             throws NullPointerException, EmberTokenInvalid, IOException;
 
     void participateCampaign(int campaign, int social_account, String photo_url, String ember_token)
             throws NullPointerException, CampaignInvalid, SocialAccountInvalid, PhotoInvalid, EmberTokenInvalid, IOException;
 
-    void synchronizeCoupons(String ember_token)
+    String synchronizeCoupons(String ember_token)
             throws NullPointerException, EmberTokenInvalid, IOException;
 
     void requestCoupon(int coupon, String ember_token)
