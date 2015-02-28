@@ -64,7 +64,7 @@
     <GridView
         android:id="@+id/grid"
         android:layout_width="fill_parent"
-        android:layout_height="271dp"
+        android:layout_height="wrap_content"
         android:columnWidth="100dp"
         android:gravity="center"
         android:numColumns="auto_fit"

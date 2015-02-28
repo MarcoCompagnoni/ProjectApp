@@ -223,8 +223,9 @@ public class LoginActivity extends ActionBarActivity {
 			if (success) {
 				
 				Intent intent = new Intent(LoginActivity.this, MainFragmentActivity.class);
-				String message = mEmailView.getText().toString();
-				intent.putExtra("email", message);
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
 				startActivity(intent);
 				  
 			} else {

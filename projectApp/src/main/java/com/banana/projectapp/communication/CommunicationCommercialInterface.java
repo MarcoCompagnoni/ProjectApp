@@ -22,6 +22,6 @@ public interface CommunicationCommercialInterface {
     String synchronizeCoupons(String ember_token)
             throws NullPointerException, EmberTokenInvalid, IOException;
 
-    void requestCoupon(int coupon, String ember_token)
+    String requestCoupon(int coupon, String ember_token)
             throws NullPointerException, CouponInvalid, EmberTokenInvalid, IOException;
 }

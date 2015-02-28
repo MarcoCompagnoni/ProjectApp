@@ -33,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,7 +47,9 @@ public class ShoppingFragment extends Fragment{
     SynchronizeCouponsTask synchronizeCouponsTask;
     RequestCouponTask requestCouponTask;
 
+    ShoppingItem requestedCoupon;
     String coupon_json;
+    String requested_coupon_json;
     private List<ShoppingItem> coupons;
 	
 	public static ShoppingFragment newInstance() {
@@ -124,10 +127,7 @@ public class ShoppingFragment extends Fragment{
                             return;
                         }
 
-                        //TODO
-                        int coupon = 0;
-
-                        requestCouponTask = new RequestCouponTask(coupon);
+                        requestCouponTask = new RequestCouponTask((int)requestedCoupon.getId());
                         requestCouponTask.execute((Void) null);
                         break;
                     case DialogInterface.BUTTON_NEGATIVE:
@@ -140,8 +140,9 @@ public class ShoppingFragment extends Fragment{
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                builder.setMessage("Are you sure?").setPositiveButton("Hell yeah!!", dialogClickListener)
-                        .setNegativeButton("Nah, fuck it", dialogClickListener).show();
+                requestedCoupon = coupons.get(position);
+                builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
             }
         });
 
@@ -233,6 +234,10 @@ public class ShoppingFragment extends Fragment{
     private class RequestCouponTask extends AsyncTask<Void, Void, Boolean> {
 
         int mCoupon;
+        long id;
+        String code;
+        String coupon;
+        int credits;
         RequestCouponTask(int coupon) {
             mCoupon = coupon;
         }
@@ -243,19 +248,35 @@ public class ShoppingFragment extends Fragment{
             try {
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
-                    client.requestCoupon(mCoupon, ember_token);
+                    requested_coupon_json = client.requestCoupon(mCoupon, ember_token);
+                } else {
+                    InputStream inputStream = getResources().openRawResource(R.raw.requested_coupon);
+                    BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder total = new StringBuilder();
+                    String line;
+                    while ((line = r.readLine()) != null) {
+                        total.append(line);
+                    }
+                    requested_coupon_json = total.toString();
+                    JSONObject o = new JSONObject(requested_coupon_json);
+                    JSONObject data = o.getJSONObject("data");
+                    id = data.getLong("id");
+                    coupon = data.getString("coupon");
+                    credits = data.getInt("credits");
+                    code = data.getString("code");
                 }
-                return true;
-            } catch (IOException | EmberTokenInvalid | CouponInvalid e) {
-                e.printStackTrace();
+            } catch (JSONException | IOException | EmberTokenInvalid | CouponInvalid e1) {
+                e1.printStackTrace();
             }
-
             return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
             requestCouponTask = null;
+            Toast.makeText(getActivity(),
+                    "id = "+id+" coupon = "+coupon+" credits = "+credits+" code = "+code
+                    ,Toast.LENGTH_LONG).show();
         }
 
         @Override

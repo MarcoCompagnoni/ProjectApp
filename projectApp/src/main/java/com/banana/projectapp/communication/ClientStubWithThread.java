@@ -25,9 +25,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-/**
- * Created by Compagnoni on 15/01/2015.
- */
 public class ClientStubWithThread implements CommunicationProfileInterface, CommunicationCommercialInterface{
 
     private String TAG = "client";
@@ -561,7 +558,7 @@ public class ClientStubWithThread implements CommunicationProfileInterface, Comm
     }
 
     @Override
-    public void requestCoupon(final int coupon, final String ember_token)
+    public String requestCoupon(final int coupon, final String ember_token)
             throws NullPointerException, EmberTokenInvalid, CouponInvalid, IOException {
 
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
@@ -603,5 +600,6 @@ public class ClientStubWithThread implements CommunicationProfileInterface, Comm
             }
         });
         t.start();
+        return null;
     }
 }

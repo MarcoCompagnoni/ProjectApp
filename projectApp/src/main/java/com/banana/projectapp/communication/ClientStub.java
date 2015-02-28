@@ -505,7 +505,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void requestCoupon(final int coupon, final String ember_token)
+    public String requestCoupon(final int coupon, final String ember_token)
             throws NullPointerException, EmberTokenInvalid, CouponInvalid, IOException {
 
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
@@ -522,10 +522,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
                         if (result instanceof CouponInvalid) { throw (CouponInvalid) result; }
                         else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
                         else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"coupon richiesto con successo");
-                            else
-                                Log.i(TAG,"problemi con la richiesta coupon");
+                            return (String) result;
                         } else { throw new IOException("input/output error"); }
 
                     } catch (ClassNotFoundException e) {

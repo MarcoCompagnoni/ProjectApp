@@ -219,81 +219,44 @@ public class FacebookPhotos extends ActionBarActivity {
         });
     }
 
+    public static Location getGeoLocation(final LocationManager locationManager){
+        Location recentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        final Location[] nowLocation = new Location[1];
+        if(recentLocation != null && recentLocation.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
+            Log.i(TAG,"location recente");
+            return recentLocation;
+        } else {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, new LocationListener() {
+
+                @Override
+                public void onLocationChanged(Location location) {
+                    nowLocation[0] = location;
+                    locationManager.removeUpdates(this);
+                }
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {}
+                @Override
+                public void onProviderEnabled(String provider) {}
+                @Override
+                public void onProviderDisabled(String provider) {}
+            });
+        }
+        return nowLocation[0];
+    }
+
     private void getGeoLocation(){
         final TextView textView = (TextView) findViewById(R.id.geoView);
         final LocationManager locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
 
-        Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location loc = FacebookPhotos.getGeoLocation(locationManager);
 
-        if(loc != null && loc.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
-            Log.i(TAG,"location recente");
-            loc.getLatitude();
-            loc.getLongitude();
-            String text = loc.getLatitude() + ", " + loc.getLongitude();
-            textView.setText(text);
-            textView.invalidate();
-            Log.i(TAG,"fatto");
+        loc.getLatitude();
+        loc.getLongitude();
+        String text = loc.getLatitude() + ", " + loc.getLongitude();
+        textView.setText(text);
+        textView.invalidate();
 
-        } else {
-            Log.i(TAG,"no recente, mettiamo il location listener.");
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
-                @Override
-                public void onLocationChanged(Location loc) {
-                    Log.i(TAG, "on location changed");
-                    loc.getLatitude();
-                    loc.getLongitude();
-                    String text = loc.getLatitude() + ", " + loc.getLongitude();
-                    textView.setText(text);
-                    textView.invalidate();
-                    Log.i(TAG, "fatto");
-                    locationManager.removeUpdates(this);
-                }
-
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                }
-
-                @Override
-                public void onProviderEnabled(String provider) {
-
-                }
-
-                @Override
-                public void onProviderDisabled(String provider) {
-
-                }
-            });
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, new LocationListener() {
-                @Override
-                public void onLocationChanged(Location loc) {
-                    Log.i(TAG, "on location changed");
-                    loc.getLatitude();
-                    loc.getLongitude();
-                    String text = loc.getLatitude() + ", " + loc.getLongitude();
-                    textView.setText(text);
-                    textView.invalidate();
-                    Log.i(TAG, "fatto");
-                    locationManager.removeUpdates(this);
-                }
-
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                }
-
-                @Override
-                public void onProviderEnabled(String provider) {
-
-                }
-
-                @Override
-                public void onProviderDisabled(String provider) {
-
-                }
-            });
-        }
     }
 
     protected void getPosts(){
@@ -331,7 +294,7 @@ public class FacebookPhotos extends ActionBarActivity {
         params.putString("with", "location");
         posts.setParameters(params);
         posts.executeAsync();
-        Log.i(TAG,"execute get posts" );
+        Log.i(TAG, "execute get posts");
     }
 
 	protected void retrievePhotos() {
