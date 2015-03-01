@@ -44,6 +44,7 @@ public class CampaignFragment extends Fragment {
 	ListView list;
     ClientStub client;
     SynchronizeCampaignTask synchronizeCampaignTask;
+    TextView credits;
 
     String campaign_json;
     private List<CompanyCampaign> campaigns;
@@ -62,6 +63,15 @@ public class CampaignFragment extends Fragment {
         list.setAdapter(adapter);
 
         adapter.notifyDataSetChanged();
+
+        credits.setText(DataHolder.getCredits()+" CR");
+        credits.invalidate();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        updateView();
+        super.onActivityResult(requestCode,resultCode,data);
     }
 
     @Override
@@ -91,6 +101,10 @@ public class CampaignFragment extends Fragment {
         nome.setText(DataHolder.getEmail());
         nome.invalidate();
 
+        credits = (TextView) rootView.findViewById(R.id.numero_crediti);
+        credits.setText(DataHolder.getCredits()+" CR");
+        credits.invalidate();
+
         final Button synchronizeCampaign = (Button) rootView.findViewById(R.id.synchronizeCampaign);
         synchronizeCampaign.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,8 +133,9 @@ public class CampaignFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 Toast.makeText(getActivity(), campaigns.get(position).getName(), Toast.LENGTH_SHORT).show();
+                DataHolder.setCampaign(campaigns.get(position));
                 Intent intent = new Intent(getActivity(),FacebookPhotos.class);
-                startActivity(intent);
+                startActivityForResult(intent,1);
             }
         });
 

@@ -44,6 +44,7 @@ public class ProfileFragment extends Fragment{
     private ClientStub client;
     TextView nome;
     TextView email;
+    TextView credits;
 
 //    DownloadSocialsImagesTask socialsImagesTask;
     ChangeMailTask changeMailTask;
@@ -70,6 +71,7 @@ public class ProfileFragment extends Fragment{
     public void onActivityResult(int a, int b, Intent i){
         Log.e("ciao","on activity result");
         updateView();
+        super.onActivityResult(a,b,i);
     }
 
 	public static ProfileFragment newInstance() {
@@ -117,6 +119,9 @@ public class ProfileFragment extends Fragment{
         email = (TextView) rootView.findViewById(R.id.email);
         email.setText(DataHolder.getEmail());
         email.invalidate();
+        TextView credits = (TextView) rootView.findViewById(R.id.numero_crediti);
+        credits.setText(DataHolder.getCredits()+" CR");
+        credits.invalidate();
 
         final Button change_mail = (Button) rootView.findViewById(R.id.change_email);
         change_mail.setOnClickListener(new View.OnClickListener() {

@@ -29,9 +29,11 @@ import org.json.JSONObject;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
+import com.banana.projectapp.campagne.CompanyCampaign;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.LocationInvalid;
 import com.banana.projectapp.exception.PhotoInvalid;
 import com.banana.projectapp.exception.SocialAccountInvalid;
 import com.facebook.Request;
@@ -248,7 +250,6 @@ public class FacebookPhotos extends ActionBarActivity {
         final TextView textView = (TextView) findViewById(R.id.geoView);
         final LocationManager locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
-
         Location loc = FacebookPhotos.getGeoLocation(locationManager);
 
         loc.getLatitude();
@@ -363,12 +364,12 @@ public class FacebookPhotos extends ActionBarActivity {
                         return;
                     }
 
-                    //TODO
-                    int campaign = 0;
-                    int socialType = 0;
-                    String url = "a";
+                    int campaign = (int) DataHolder.getCampaign().getId();
 
-                    participateCampaignTask = new ParticipateCampaignTask(campaign, socialType, url);
+                    final LocationManager locationManager = (LocationManager)
+                            getSystemService(Context.LOCATION_SERVICE);
+                    participateCampaignTask = new ParticipateCampaignTask(campaign,
+                            FacebookPhotos.getGeoLocation(locationManager));
                     participateCampaignTask.execute((Void) null);
 	                break;
 	            case DialogInterface.BUTTON_NEGATIVE:
@@ -382,10 +383,9 @@ public class FacebookPhotos extends ActionBarActivity {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
             	toSend = sources.get(position);
-            	builder.setMessage("Are you sure?").setPositiveButton("Hell yeah!!", dialogClickListener)
-    	        .setNegativeButton("Nah, fuck it", dialogClickListener).show();
-            	
-            	//Toast.makeText(MainActivity.this, "You Clicked at " +sources.get(position), Toast.LENGTH_SHORT).show();
+            	builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+    	        .setNegativeButton("No", dialogClickListener).show();
+
             }
         });
 	}
@@ -430,15 +430,12 @@ public class FacebookPhotos extends ActionBarActivity {
 
     private class ParticipateCampaignTask extends AsyncTask<Void, Void, Boolean> {
 
-
         int mCampaign;
-        int mSocialType;
-        String photoUrl;
+        Location mLocation;
 
-        ParticipateCampaignTask(int campaign, int socialType, String url) {
+        ParticipateCampaignTask(int campaign, Location location) {
             mCampaign = campaign;
-            mSocialType = socialType;
-            photoUrl = url;
+            mLocation = location;
         }
 
         @Override
@@ -447,10 +444,9 @@ public class FacebookPhotos extends ActionBarActivity {
             try {
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
-                    client.participateCampaign(mCampaign,mSocialType,photoUrl,ember_token);
+                    client.participateCampaign(mCampaign,mLocation,ember_token);
                 }
-                return true;
-            } catch (IOException | EmberTokenInvalid | PhotoInvalid | CampaignInvalid | SocialAccountInvalid e) {
+            } catch (IOException | EmberTokenInvalid | CampaignInvalid | LocationInvalid e) {
                 e.printStackTrace();
             }
 
@@ -460,6 +456,10 @@ public class FacebookPhotos extends ActionBarActivity {
         @Override
         protected void onPostExecute(final Boolean success) {
             participateCampaignTask = null;
+            if (success){
+                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getCredits());
+                Log.e("","aggiornati crediti= "+DataHolder.getCredits());
+            }
         }
 
         @Override

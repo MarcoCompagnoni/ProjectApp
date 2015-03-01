@@ -46,7 +46,7 @@ public class ShoppingFragment extends Fragment{
     ClientStub client;
     SynchronizeCouponsTask synchronizeCouponsTask;
     RequestCouponTask requestCouponTask;
-
+    TextView creditsText;
     ShoppingItem requestedCoupon;
     String coupon_json;
     String requested_coupon_json;
@@ -95,6 +95,9 @@ public class ShoppingFragment extends Fragment{
 		TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
 		nome.setText(DataHolder.getEmail());
 		nome.invalidate();
+        creditsText = (TextView) rootView.findViewById(R.id.numero_crediti);
+        creditsText.setText(DataHolder.getCredits()+" CR");
+        creditsText.invalidate();
 
         final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);
         synchronizeCoupons.setOnClickListener(new View.OnClickListener() {
@@ -274,6 +277,9 @@ public class ShoppingFragment extends Fragment{
         @Override
         protected void onPostExecute(final Boolean success) {
             requestCouponTask = null;
+            DataHolder.setCredits(DataHolder.getCredits()-credits);
+            creditsText.setText(DataHolder.getCredits()+" CR");
+            creditsText.invalidate();
             Toast.makeText(getActivity(),
                     "id = "+id+" coupon = "+coupon+" credits = "+credits+" code = "+code
                     ,Toast.LENGTH_LONG).show();

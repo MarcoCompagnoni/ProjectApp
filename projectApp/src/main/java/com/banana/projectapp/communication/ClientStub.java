@@ -1,6 +1,7 @@
 package com.banana.projectapp.communication;
 
 import android.content.Context;
+import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -10,6 +11,7 @@ import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.CouponInvalid;
 import com.banana.projectapp.exception.EmailDuplicate;
 import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.LocationInvalid;
 import com.banana.projectapp.exception.MailException;
 import com.banana.projectapp.exception.PhotoInvalid;
 import com.banana.projectapp.exception.SocialAccountInvalid;
@@ -431,18 +433,17 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void participateCampaign(final int campaign, final int social_account, final String photo_url, final String ember_token)
-            throws NullPointerException, CampaignInvalid, SocialAccountInvalid, PhotoInvalid, EmberTokenInvalid, IOException {
+    public void participateCampaign(final int campaign, final Location location, final String ember_token)
+            throws NullPointerException, CampaignInvalid, LocationInvalid, EmberTokenInvalid, IOException {
 
-        if (photo_url == null) { throw new NullPointerException("missing photo url."); }
+        if (location == null) { throw new NullPointerException("missing location."); }
         if (ember_token == null) { throw new NullPointerException("missing ember token."); }
 
 
                     initialize();
                     out.writeObject("partecipateCampaign");
                     out.writeObject(campaign);
-                    out.writeObject(social_account);
-                    out.writeObject(photo_url);
+                    out.writeObject(location);
                     out.writeObject(ember_token);
                     out.flush();
 
@@ -450,8 +451,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
 
                         Object result = in.readObject();
                         if (result instanceof CampaignInvalid) { throw (CampaignInvalid) result; }
-                        else if (result instanceof SocialAccountInvalid) { throw (SocialAccountInvalid) result; }
-                        else if (result instanceof PhotoInvalid) { throw (PhotoInvalid) result; }
+                        else if (result instanceof LocationInvalid) { throw (LocationInvalid) result; }
                         else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
                         else if (result instanceof String) {
                             if (result.equals("OK"))
