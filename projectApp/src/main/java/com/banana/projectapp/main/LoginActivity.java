@@ -6,6 +6,7 @@ import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.ActivationNeeded;
 import com.banana.projectapp.exception.AuthenticationFailure;
 import com.banana.projectapp.exception.EmailDuplicate;
+import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.exception.MailException;
 import com.banana.projectapp.exception.UserInvalid;
 
@@ -198,11 +199,13 @@ public class LoginActivity extends ActionBarActivity {
                 if (DataHolder.testing) {
                     String token = client.login(mEmail, mPassword);
                     DataHolder.setToken(token);
+                    int credits = client.getCredits(token);
+                    DataHolder.setCredits(credits);
                 }
 
                 DataHolder.setEmail(mEmail);
                 return true;
-            } catch (IOException | ActivationNeeded | AuthenticationFailure | UserInvalid e) {
+            } catch (IOException | ActivationNeeded | AuthenticationFailure | UserInvalid | EmberTokenInvalid e) {
                 e.printStackTrace();
             }
 

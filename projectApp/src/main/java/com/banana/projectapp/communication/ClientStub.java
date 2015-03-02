@@ -153,6 +153,38 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
+    public int getCredits(String ember_token) throws NullPointerException, EmberTokenInvalid, IOException {
+        if (ember_token == null) { throw new NullPointerException("missing token."); }
+
+        initialize();
+        out.writeObject("getCredits");
+        out.writeObject(ember_token);
+        out.flush();
+
+        try {
+
+            Object result = in.readObject();
+            if (result instanceof EmberTokenInvalid) {
+                throw (EmberTokenInvalid) result;
+            } else if (result instanceof Integer) {
+                return (Integer) result;
+            } else {
+                throw new IOException("input/output error");
+            }
+
+        } catch (ClassNotFoundException e) {
+            throw new IOException("input/output error");
+        }
+        finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
     public void logout(final String email) throws NullPointerException, IOException, UserInvalid {
 
         if (email == null) { throw new NullPointerException("missing email."); }

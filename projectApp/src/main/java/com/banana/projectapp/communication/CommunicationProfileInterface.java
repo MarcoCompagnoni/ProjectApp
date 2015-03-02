@@ -19,6 +19,8 @@ public interface CommunicationProfileInterface {
     String login(String email, String password)
             throws NullPointerException, UserInvalid, ActivationNeeded, AuthenticationFailure, IOException;
 
+    int getCredits(String ember_token) throws NullPointerException, EmberTokenInvalid, IOException;
+
     void logout(String email) throws NullPointerException, UserInvalid, IOException;
 
     void deleteYourAccount(String email, String ember_token)

@@ -13,7 +13,7 @@ import java.util.List;
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
-import com.banana.projectapp.social.FacebookPhotos;
+import com.banana.projectapp.social.ShowCampaign;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
@@ -134,7 +134,7 @@ public class CampaignFragment extends Fragment {
                                     int position, long id) {
                 Toast.makeText(getActivity(), campaigns.get(position).getName(), Toast.LENGTH_SHORT).show();
                 DataHolder.setCampaign(campaigns.get(position));
-                Intent intent = new Intent(getActivity(),FacebookPhotos.class);
+                Intent intent = new Intent(getActivity(),ShowCampaign.class);
                 startActivityForResult(intent,1);
             }
         });

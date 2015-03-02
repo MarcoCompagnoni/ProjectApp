@@ -21,6 +21,7 @@ import com.banana.projectapp.main.MainFragmentActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -249,6 +250,9 @@ public class ShoppingFragment extends Fragment{
         protected Boolean doInBackground(Void... params) {
 
             try {
+                if (credits > DataHolder.getCredits())
+                    return false;
+
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
                     requested_coupon_json = client.requestCoupon(mCoupon, ember_token);
@@ -277,12 +281,21 @@ public class ShoppingFragment extends Fragment{
         @Override
         protected void onPostExecute(final Boolean success) {
             requestCouponTask = null;
-            DataHolder.setCredits(DataHolder.getCredits()-credits);
-            creditsText.setText(DataHolder.getCredits()+" CR");
-            creditsText.invalidate();
-            Toast.makeText(getActivity(),
-                    "id = "+id+" coupon = "+coupon+" credits = "+credits+" code = "+code
-                    ,Toast.LENGTH_LONG).show();
+            if (success){
+                DataHolder.setCode(code);
+                DataHolder.setCredits(DataHolder.getCredits()-credits);
+                creditsText.setText(DataHolder.getCredits()+" CR");
+                creditsText.invalidate();
+                Toast.makeText(getActivity(),
+                        "id = "+id+" coupon = "+coupon+" credits = "+credits+" code = "+code
+                        ,Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(getActivity(), ShowCode.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(getActivity(),
+                        "You do not have enough credits"
+                        ,Toast.LENGTH_LONG).show();
+            }
         }
 
         @Override

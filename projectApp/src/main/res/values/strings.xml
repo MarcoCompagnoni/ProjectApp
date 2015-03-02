@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Frienz</string>
+    <string name="app_name">Friendz</string>
     <string name="title_section1">Campagne disponibili</string>
     <string name="title_section2">Shopping</string>
     <string name="title_section3">Profilo</string>
@@ -14,5 +14,9 @@
     <string name="title_section4">Log out</string>
     <string name="user">Marco Compagnoni</string>
     <string name="credits">100 CR</string>
+    <string name="title_activity_show_code">ShowCode</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_participate_campaign">ParticipateCampaign</string>
 
 </resources>
