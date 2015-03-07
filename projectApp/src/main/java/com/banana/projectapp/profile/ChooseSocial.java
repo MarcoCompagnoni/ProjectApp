@@ -1,26 +1,25 @@
-package com.banana.projectapp.social;
+package com.banana.projectapp.profile;
 
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.exception.EmberTokenInvalid;
-import com.banana.projectapp.exception.SocialAccountInvalid;
-import com.banana.projectapp.exception.SocialAccountTokenInvalid;
-import com.banana.projectapp.profile.Social;
+import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.SocialTypeInvalid;
+import com.facebook.HttpMethod;
+import com.facebook.Request;
+import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionLoginBehavior;
 import com.facebook.SessionState;
@@ -29,13 +28,10 @@ import com.facebook.widget.LoginButton;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class ChooseSocial extends ActionBarActivity{
 
-    private static final String TAG = "MainFragment";
     LoginButton authButton = null;
     private UiLifecycleHelper uiHelper;
     Session session;
@@ -54,13 +50,12 @@ public class ChooseSocial extends ActionBarActivity{
         uiHelper = new UiLifecycleHelper(this, callback);
 
         try {
-            client = new ClientStub(this);
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
         setupLogin();
-        getApplicationHASH();
 
         uiHelper.onCreate(savedInstanceState);
 
@@ -74,6 +69,17 @@ public class ChooseSocial extends ActionBarActivity{
                 (session.isOpened() || session.isClosed()) ) {
             onSessionStateChange(session, session.getState());
         }
+//        new Request(
+//                session,
+//                "/me/permissions",
+//                null,
+//                HttpMethod.DELETE,
+//                new Request.Callback() {
+//                    public void onCompleted(Response response) {
+//
+//                    }
+//                }
+//        ).executeAsync();
         uiHelper.onResume();
     }
 
@@ -122,70 +128,38 @@ public class ChooseSocial extends ActionBarActivity{
         return super.onOptionsItemSelected(item);
     }
 
-    private String getApplicationHASH(){
-        PackageInfo info;
-        try {
-            info = getPackageManager().getPackageInfo("com.banana.projectapp", PackageManager.GET_SIGNATURES);
-            Signature signature = info.signatures[0];
-            MessageDigest md;
-            md = MessageDigest.getInstance("SHA");
-            md.update(signature.toByteArray());
-            String something = new String(Base64.encode(md.digest(), 0));
-            Log.e("hash key", something);
-            return something;
-        } catch (PackageManager.NameNotFoundException e1) {
-            Log.e("name not found", e1.toString());
-        } catch (NoSuchAlgorithmException e) {
-            Log.e("no such an algorithm", e.toString());
-        } catch (Exception e) {
-            Log.e("exception", e.toString());
-        }
-        return null;
-    }
-
     private void setupLogin() {
-        session = Session.getActiveSession();
-        if (session!= null && session.isOpened())
-            return;
 
         authButton = (LoginButton) findViewById(R.id.login_button);
-        authButton.setReadPermissions(Arrays.asList("user_likes", "user_status", "user_status", "user_photos", "user_location", "user_birthday", "read_stream"));
+        authButton.setReadPermissions(Arrays.asList("user_friends","user_photos", "user_birthday", "read_stream"));
         authButton.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
-    }
-
-    private void saveToken(){
-        DataHolder.setToken(session.getAccessToken());
-        Log.i(TAG, "salvato token!!! = "+DataHolder.getToken());
     }
 
     private void onSessionStateChange(Session session, SessionState state) {
         this.session = session;
         if (state.isOpened()) {
-            Log.i(TAG, "Logged in..."+DataHolder.getToken());
 
-            saveToken();
+//            Log.i("","START");
+//            for (String s: session.getPermissions()) {
+//                Log.i("", s);
+//            }
+
             if (addSocialTask != null){
                 return;
             }
-            int socialType = DataHolder.SocialType.FACEBOOK;
-            String socialToken = DataHolder.getToken();
-            addSocialTask = new AddSocialTask(socialType, socialToken);
-            addSocialTask.execute((Void) null);
-            Log.i(TAG,"lanciato add social task");
 
-        } else if (state.isClosed()) {
-            Log.i(TAG, "Logged out...");
+            int socialType = DataHolder.SocialType.FACEBOOK;
+            addSocialTask = new AddSocialTask(socialType);
+            addSocialTask.execute((Void) null);
         }
     }
 
     private class AddSocialTask extends AsyncTask<Void, Void, Boolean> {
 
         private final int mSocialType;
-        private final String mSocialToken;
 
-        AddSocialTask(int socialType, String socialToken) {
+        AddSocialTask(int socialType){
             mSocialType = socialType;
-            mSocialToken = socialToken;
         }
 
         @Override
@@ -194,32 +168,44 @@ public class ChooseSocial extends ActionBarActivity{
             try {
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
-                    client.addSocial(mSocialType, mSocialToken, ember_token);
+                    Log.i("","chiamo client.add social con"+mSocialType+","+session.getAccessToken());
+                    client.addSocial(mSocialType, session.getAccessToken(), ember_token);
                 }
-                Log.i(TAG,"chiamo add social passando "+mSocialType+" e come token "+mSocialToken);
                 return true;
-            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid | SocialAccountTokenInvalid e) {
+            } catch (IOException | EmberTokenInvalid | SocialTypeInvalid e) {
                 e.printStackTrace();
+                return false;
+            } catch (NoConnectionException e) {
+                ChooseSocial.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ChooseSocial.this,"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
-
-            return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            DBManager db = new DBManager(ChooseSocial.this);
-            db.open();
-            switch (mSocialType){
-                case DataHolder.SocialType.FACEBOOK:
-                    db.insert(new Social(mSocialType, BitmapFactory.decodeResource(getResources(),
-                            R.drawable.facebook_logo), "facebook"));
-                    break;
-                case DataHolder.SocialType.TWITTER:
-                    db.insert(new Social(mSocialType, BitmapFactory.decodeResource(getResources(),
-                            R.drawable.twitter_icon), "twitter"));
-                    break;
+            Log.e("","onpostExecute");
+            if (success) {
+                DBManager db = new DBManager(ChooseSocial.this);
+                db.open();
+                switch (mSocialType) {
+                    case DataHolder.SocialType.FACEBOOK:
+                        db.insert(new Social(mSocialType, BitmapFactory.decodeResource(getResources(),
+                                R.drawable.facebook_logo), "facebook"));
+                        break;
+                    case DataHolder.SocialType.TWITTER:
+                        db.insert(new Social(mSocialType, BitmapFactory.decodeResource(getResources(),
+                                R.drawable.twitter_icon), "twitter"));
+                        break;
+                }
+                db.close();
+            } else {
+                Toast.makeText(ChooseSocial.this, "c'è stato qualche imprevisto nel aggiungere il social biricchino", Toast.LENGTH_SHORT).show();
             }
-            db.close();
             addSocialTask = null;
         }
 

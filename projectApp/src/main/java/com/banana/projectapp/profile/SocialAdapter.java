@@ -10,8 +10,10 @@ import com.banana.projectapp.R.id;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.exception.EmberTokenInvalid;
-import com.banana.projectapp.exception.SocialAccountInvalid;
+import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.SocialTypeInvalid;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.view.LayoutInflater;
@@ -32,11 +34,10 @@ public class SocialAdapter extends BaseAdapter {
 
 	
 	public SocialAdapter(Context context, List<Social> socials) {
-        this.context = context;
 		mInflater = LayoutInflater.from(context);
 		this.socials = socials;
         try {
-            client = new ClientStub(context);
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -115,8 +116,11 @@ public class SocialAdapter extends BaseAdapter {
                     client.deleteSocial(mSocialType, ember_token);
                 }
                 return true;
-            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid e) {
+            } catch (IOException | EmberTokenInvalid | SocialTypeInvalid e) {
                 e.printStackTrace();
+            } catch (NoConnectionException e) {
+                Toast.makeText(context,"No connection",Toast.LENGTH_SHORT).show();
+                return false;
             }
 
             return true;
@@ -124,13 +128,15 @@ public class SocialAdapter extends BaseAdapter {
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            DBManager db = new DBManager(context);
-            db.open();
-            db.remove(mSocialType,"SOCIALS");
-            socials = db.getSocials();
-            db.close();
-            notifyDataSetChanged();
-            deleteSocialTask = null;
+            if (success) {
+                DBManager db = new DBManager(context);
+                db.open();
+                db.remove(mSocialType, "SOCIALS");
+                socials = db.getSocials();
+                db.close();
+                notifyDataSetChanged();
+                deleteSocialTask = null;
+            }
         }
 
         @Override

@@ -22,7 +22,7 @@ import com.banana.projectapp.shop.ShoppingItem;
 public class DBManager{
 
     public static final String DATABASE_NAME = "FRIENZ.db";
-    public static final int DATABASE_VERSION = 5;
+    public static final int DATABASE_VERSION = 4;
 
     public static final String CAMPAIGNS_TABLE = "CAMPAIGNS";
     public static final String SOCIALS_TABLE = "SOCIALS";
@@ -84,7 +84,6 @@ public class DBManager{
         values.put(URL, campaign.getUrl());
         values.put(LOGO, getBytes(campaign.getLogo()));
         values.put(NAME, campaign.getName());
-        values.put(CREDITS, campaign.getCredits());
         return values;
     }
     private ContentValues toContentValue(ShoppingItem item) throws NullPointerException{
@@ -160,9 +159,8 @@ public class DBManager{
             String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
             String url = cursor.getString(cursor.getColumnIndex(DBManager.URL));
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
-            int credits = cursor.getInt(cursor.getColumnIndex(DBManager.CREDITS));
 
-            CompanyCampaign newCampaign = new CompanyCampaign(id, url, logo, name, credits);	//creo l' account
+            CompanyCampaign newCampaign = new CompanyCampaign(id, url, logo, name);	//creo l' account
 
             list.add(0,newCampaign);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
@@ -205,8 +203,7 @@ public class DBManager{
                 + ID + " integer primary key, "
                 + URL + " text not null, "
                 + NAME + " text not null, "
-                + LOGO + " blob not null, "
-                + CREDITS + " text not null);";
+                + LOGO + " blob not null);";
         private static final String SQL_CREATE_TABLE_SHOPPING_ITEMS = "create table "
                 + SHOPPING_ITEMS_TABLE + " (" //
                 + ID + " integer primary key, "

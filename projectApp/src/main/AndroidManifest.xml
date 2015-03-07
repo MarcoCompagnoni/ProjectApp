@@ -47,7 +47,7 @@
                 android:value="com.banana.projectapp.main.MainFragmentActivity" />
         </activity>
         <activity
-            android:name=".social.ChooseSocial"
+            android:name=".profile.ChooseSocial"
             android:label="@string/app_name" >
             android:parentActivityName=".main.MainFragmentActivity" >
             <meta-data

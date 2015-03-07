@@ -7,21 +7,18 @@ public class CompanyCampaign {
     private String url;
 	private Bitmap logo;
 	private String name;
-	private int credits;
 
-    public CompanyCampaign(long id, String url, String name, int credits){
+    public CompanyCampaign(long id, String url, String name){
         this.setId(id);
         this.setUrl(url);
         this.setName(name);
-        this.setCredits(credits);
     }
 
-	public CompanyCampaign(long id, String url, Bitmap logo, String name, int credits){
+	public CompanyCampaign(long id, String url, Bitmap logo, String name){
         this.setId(id);
         this.setUrl(url);
 		this.setLogo(logo);
 		this.setName(name);
-		this.setCredits(credits);
 	}
 	public Bitmap getLogo() {
 		return logo;
@@ -34,12 +31,6 @@ public class CompanyCampaign {
 	}
 	public void setName(String name) {
 		this.name = name;
-	}
-	public int getCredits() {
-		return credits;
-	}
-	public void setCredits(int credits) {
-		this.credits = credits;
 	}
     public long getId() {
         return id;

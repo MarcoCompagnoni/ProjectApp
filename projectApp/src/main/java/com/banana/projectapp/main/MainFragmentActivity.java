@@ -4,6 +4,8 @@ import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
 import com.banana.projectapp.campagne.CampaignFragment;
 import com.banana.projectapp.communication.ClientStub;
+import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.profile.ProfileFragment;
 import com.banana.projectapp.shop.ShoppingFragment;
@@ -17,6 +19,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,7 +62,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
 				(DrawerLayout) findViewById(R.id.drawer_layout));
 
         try {
-            client = new ClientStub(this);
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -117,7 +120,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
                 return;
             }
 
-            userLogoutTask = new UserLogoutTask(DataHolder.getEmail());
+            userLogoutTask = new UserLogoutTask();
             userLogoutTask.execute((Void) null);
 
         }
@@ -209,22 +212,26 @@ public class MainFragmentActivity extends ActionBarActivity implements
 
     public class UserLogoutTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mEmail;
-
-        UserLogoutTask(String email) {
-            mEmail = email;
-        }
+        UserLogoutTask() {}
 
         @Override
         protected Boolean doInBackground(Void... params) {
 
             try {
                 if (DataHolder.testing) {
-                    client.logout(mEmail);
+                    Log.e("","chiamo logout con token "+DataHolder.getToken());
+                    client.logout(DataHolder.getToken());
                 }
                 return true;
-            } catch (UserInvalid | IOException userInvalid) {
+            } catch (EmberTokenInvalid | IOException userInvalid) {
                 userInvalid.printStackTrace();
+            } catch (NoConnectionException e) {
+                MainFragmentActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainFragmentActivity.this,"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });                return false;
             }
 
             return true;

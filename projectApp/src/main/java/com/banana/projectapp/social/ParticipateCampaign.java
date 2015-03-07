@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -27,7 +26,8 @@ import com.banana.projectapp.R;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.EmberTokenInvalid;
-import com.banana.projectapp.exception.LocationInvalid;
+import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.SocialTypeInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 import com.facebook.Request;
 import com.facebook.Response;
@@ -46,12 +46,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 public class ParticipateCampaign extends ActionBarActivity {
+
+    private Session session;
     private static final String TAG = "MainFragment";
     ArrayAdapter placeArrayAdapter;
     private UiLifecycleHelper uiHelper;
-    Session session;
     ClientStub client;
     ArrayList<String> places = new ArrayList<>();
+    JSONArray posts;
+
     ParticipateCampaignTask participateCampaignTask;
 
     @Override
@@ -77,8 +80,10 @@ public class ParticipateCampaign extends ActionBarActivity {
                             return;
                         }
 
+
                         participateCampaignTask = new ParticipateCampaignTask();
                         participateCampaignTask.execute((Void) null);
+                        Log.e("","lancio participate campaign task");
                         break;
                     case DialogInterface.BUTTON_NEGATIVE:
                         Toast.makeText(ParticipateCampaign.this,
@@ -100,7 +105,7 @@ public class ParticipateCampaign extends ActionBarActivity {
         uiHelper = new UiLifecycleHelper(this, callback);
 
         try {
-            client = new ClientStub(this);
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -115,12 +120,12 @@ public class ParticipateCampaign extends ActionBarActivity {
     @Override
     public void onResume() {
         super.onResume();
-        session = Session.getActiveSession();
+        this.session = Session.getActiveSession();
         if (session != null &&
                 (session.isOpened() || session.isClosed()) ) {
             onSessionStateChange(session, session.getState());
         }
-        getPosts();
+        //getPosts();
         uiHelper.onResume();
     }
 
@@ -191,18 +196,18 @@ public class ParticipateCampaign extends ActionBarActivity {
     }
 
     protected void getPosts(){
-        Request posts = Request.newGraphPathRequest(session, "/me/feed", new Request.Callback(){
+        final Request posts_request = Request.newGraphPathRequest(session
+                , "/me/feed", new Request.Callback(){
             @Override
             public void onCompleted(Response response){
                 final JSONObject postsConnection = response.getGraphObject().getInnerJSONObject();
                 new Thread(){
                     public void run(){
-                        JSONArray array;
                         try {
-                            array = postsConnection.getJSONArray("data");
-                            int number_of_posts = array.length();
+                            posts = postsConnection.getJSONArray("data");
+                            int number_of_posts = posts.length();
                             for (int i=0; i<number_of_posts;i++){
-                                JSONObject post = array.getJSONObject(i);
+                                JSONObject post = posts.getJSONObject(i);
                                 JSONObject place = post.getJSONObject("place");
                                 places.add(place.getString("name"));
                                 Log.i(TAG, place.toString());
@@ -223,8 +228,8 @@ public class ParticipateCampaign extends ActionBarActivity {
         } );
         Bundle params = new Bundle();
         params.putString("with", "location");
-        posts.setParameters(params);
-        posts.executeAsync();
+        posts_request.setParameters(params);
+        posts_request.executeAsync();
         Log.i(TAG, "execute get posts");
     }
 
@@ -254,12 +259,27 @@ public class ParticipateCampaign extends ActionBarActivity {
             try {
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
-                    client.participateCampaign((int)DataHolder.getCampaign().getId(),
-                            DataHolder.getLocation(),ember_token);
+
+                    Log.e("","client.participate campaign");
+                    client.participateCampaign(
+                            (int)DataHolder.getCampaign().getId(),
+                            DataHolder.SocialType.FACEBOOK,
+                            DataHolder.getLocation().getLatitude(),
+                            DataHolder.getLocation().getLongitude(),
+                            ember_token);
                 }
 
-            } catch (IOException | EmberTokenInvalid  | CampaignInvalid  | LocationInvalid e) {
+            } catch (IOException | EmberTokenInvalid | CampaignInvalid e) {
                 e.printStackTrace();
+                return false;
+            } catch (NoConnectionException e) {
+                ParticipateCampaign.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ParticipateCampaign.this,"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
 
             return true;
@@ -269,7 +289,7 @@ public class ParticipateCampaign extends ActionBarActivity {
         protected void onPostExecute(final Boolean success) {
             participateCampaignTask = null;
             if (success) {
-                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getCredits());
+                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getValue());
                 Intent intent = new Intent(ParticipateCampaign.this, MainFragmentActivity.class);
                 startActivity(intent);
             }

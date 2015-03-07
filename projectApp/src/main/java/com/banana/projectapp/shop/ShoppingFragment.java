@@ -16,6 +16,7 @@ import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.CouponInvalid;
 import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.main.MainFragmentActivity;
 
 import android.app.Activity;
@@ -73,7 +74,7 @@ public class ShoppingFragment extends Fragment{
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         try {
-            client = new ClientStub(getActivity());
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -174,7 +175,7 @@ public class ShoppingFragment extends Fragment{
                     String ember_token = DataHolder.getToken();
                     coupon_json = client.synchronizeCoupons(ember_token);
                 } else {
-                    InputStream inputStream = getResources().openRawResource(R.raw.coupons);
+                    InputStream inputStream = getResources().openRawResource(R.raw.coupon_types);
                     BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder total = new StringBuilder();
                     String line;
@@ -182,21 +183,29 @@ public class ShoppingFragment extends Fragment{
                         total.append(line);
                     }
                     coupon_json = total.toString();
-                    JSONObject o = new JSONObject(coupon_json);
-                    JSONArray aa = o.getJSONArray("data");
-                    int number_of_coupons = aa.length();
-                    for (int i=0; i<number_of_coupons;i++){
-                        JSONObject obj = aa.getJSONObject(i);
-                        ShoppingItem s = new ShoppingItem(
-                                obj.getLong("id"),
-                                obj.getString("url"),
-                                obj.getString("coupon"),
-                                obj.getInt("credits"));
-                        couponList.add(s);
-                    }
+                }
+                JSONObject o = new JSONObject(coupon_json);
+                JSONArray aa = o.getJSONArray("data");
+                int number_of_coupons = aa.length();
+                for (int i=0; i<number_of_coupons;i++){
+                    JSONObject obj = aa.getJSONObject(i);
+                    ShoppingItem s = new ShoppingItem(
+                            obj.getLong("id"),
+                            obj.getString("url"),
+                            obj.getString("shop"),
+                            obj.getInt("credits"));
+                    couponList.add(s);
                 }
             } catch (IOException | EmberTokenInvalid | JSONException e) {
                 e.printStackTrace();
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
             for (ShoppingItem s : couponList) {
                 HttpURLConnection connection;
@@ -240,7 +249,7 @@ public class ShoppingFragment extends Fragment{
         int mCoupon;
         long id;
         String code;
-        String coupon;
+        String shop;
         int credits;
         RequestCouponTask(int coupon) {
             mCoupon = coupon;
@@ -250,7 +259,7 @@ public class ShoppingFragment extends Fragment{
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (credits > DataHolder.getCredits())
+                if (requestedCoupon.getCredits() > DataHolder.getCredits())
                     return false;
 
                 if (DataHolder.testing) {
@@ -265,15 +274,25 @@ public class ShoppingFragment extends Fragment{
                         total.append(line);
                     }
                     requested_coupon_json = total.toString();
-                    JSONObject o = new JSONObject(requested_coupon_json);
-                    JSONObject data = o.getJSONObject("data");
-                    id = data.getLong("id");
-                    coupon = data.getString("coupon");
-                    credits = data.getInt("credits");
-                    code = data.getString("code");
                 }
+
+                JSONObject o = new JSONObject(requested_coupon_json);
+                JSONObject data = o.getJSONObject("data");
+                id = data.getLong("id");
+                shop = data.getString("shop");
+                credits = data.getInt("credits");
+                code = data.getString("code");
+
             } catch (JSONException | IOException | EmberTokenInvalid | CouponInvalid e1) {
                 e1.printStackTrace();
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
             return true;
         }
@@ -287,7 +306,7 @@ public class ShoppingFragment extends Fragment{
                 creditsText.setText(DataHolder.getCredits()+" CR");
                 creditsText.invalidate();
                 Toast.makeText(getActivity(),
-                        "id = "+id+" coupon = "+coupon+" credits = "+credits+" code = "+code
+                        "id = "+id+" coupon = "+shop+" credits = "+credits+" code = "+code
                         ,Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(getActivity(), ShowCode.class);
                 startActivity(intent);

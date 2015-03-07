@@ -2,12 +2,14 @@ package com.banana.projectapp.main;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
+import com.banana.projectapp.campagne.CompanyCampaign;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.ActivationNeeded;
 import com.banana.projectapp.exception.AuthenticationFailure;
 import com.banana.projectapp.exception.EmailDuplicate;
 import com.banana.projectapp.exception.EmberTokenInvalid;
 import com.banana.projectapp.exception.MailException;
+import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.UserInvalid;
 
 import android.animation.Animator;
@@ -19,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,8 +29,16 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 
 public class LoginActivity extends ActionBarActivity {
@@ -39,6 +50,8 @@ public class LoginActivity extends ActionBarActivity {
 	private EditText mPasswordView;
 	private View mProgressView;
 	private View mLoginFormView;
+
+    String user_info_json;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +90,7 @@ public class LoginActivity extends ActionBarActivity {
 		mProgressView = findViewById(R.id.login_progress);
 
         try{
-            client = new ClientStub(this);
+            client = new ClientStub();
         } catch (UnknownHostException e){
             e.printStackTrace();
         }
@@ -141,8 +154,8 @@ public class LoginActivity extends ActionBarActivity {
 		return email.contains("@");
 	}
 
-	private boolean isPasswordValid(String password) {
-		return password.length() > 4;
+	public static boolean isPasswordValid(String password) {
+		return password.length() > 3;
 	}
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
@@ -197,25 +210,61 @@ public class LoginActivity extends ActionBarActivity {
 		protected Boolean doInBackground(Void... params) {
             try {
                 if (DataHolder.testing) {
+
+                    Log.e("","chiamo client.login con "+mEmail+","+mPassword);
                     String token = client.login(mEmail, mPassword);
+                    Log.e("","mi è arrivato il token "+token);
                     DataHolder.setToken(token);
-                    int credits = client.getCredits(token);
-                    DataHolder.setCredits(credits);
+
+                    Log.e("","chiamo client.getuserinfo con "+DataHolder.getToken());
+                    user_info_json = client.getUserInfo(DataHolder.getToken());
+
+
+                } else {
+                    InputStream inputStream = getResources().openRawResource(R.raw.user_info);
+                    BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder total = new StringBuilder();
+                    String line;
+                    while ((line = r.readLine()) != null) {
+                        total.append(line);
+                    }
+                    user_info_json = total.toString();
                 }
+                JSONObject o = new JSONObject(user_info_json);
+                JSONObject data = o.getJSONObject("data");
+                int availableCredits = data.getInt("credits");
+                int participatingValue = data.getInt("value");
+                DataHolder.setCredits(availableCredits);
+                DataHolder.setValue(participatingValue);
 
                 DataHolder.setEmail(mEmail);
-                return true;
-            } catch (IOException | ActivationNeeded | AuthenticationFailure | UserInvalid | EmberTokenInvalid e) {
+            } catch (UserInvalid e) {
+                try {
+                    Log.e("","chiamo client.registration con "+mEmail+","+mPassword);
+                    client.registration(mEmail, mPassword);
+                    return false;
+                } catch (EmailDuplicate | MailException | IOException emailDuplicate) {
+                    emailDuplicate.printStackTrace();
+                } catch (NoConnectionException e1) {
+                    Toast.makeText(LoginActivity.this,"No connection",Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+            } catch (AuthenticationFailure e){
+                return false;
+            }catch (IOException | ActivationNeeded | EmberTokenInvalid | JSONException e) {
                 e.printStackTrace();
+            } catch (NoConnectionException e) {
+                LoginActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(LoginActivity.this,"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                return false;
             }
 
-            try {
-                client.registration(mEmail,mPassword);
-            } catch (EmailDuplicate | MailException | IOException emailDuplicate) {
-                emailDuplicate.printStackTrace();
-            }
-
-			return true;
+            return true;
 		}
 
 		@Override

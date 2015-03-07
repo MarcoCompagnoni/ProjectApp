@@ -3,6 +3,7 @@ package com.banana.projectapp;
 import android.location.Location;
 
 import com.banana.projectapp.campagne.CompanyCampaign;
+import com.facebook.Session;
 
 public class DataHolder {
 
@@ -19,6 +20,7 @@ public class DataHolder {
     private static CompanyCampaign campaign;
     private static String token = null;
     private static Location location = null;
+    private static int value = 0;
 
     public static String getToken() {return token;}
     public static void setToken(String token) {DataHolder.token = token;}
@@ -32,4 +34,6 @@ public class DataHolder {
     public static void setCode(String code) {DataHolder.code = code;}
     public static Location getLocation() {return location;}
     public static void setLocation(Location location) {DataHolder.location = location;}
+    public static int getValue() {return value;}
+    public static void setValue(int value) {DataHolder.value = value;}
 }

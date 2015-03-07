@@ -4,32 +4,27 @@
         {
             "id":1,
             "url":"https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTLSZwiSx1wV28ZyPF3JN_oGOkZBfdyIs-ixXeYXHQouglWDRXKDw",
-            "customer":"coca cola",
-            "credits":70
+            "customer":"coca cola"
         },
         {
             "id":2,
             "url":"https://pullquotesandexcerpts.files.wordpress.com/2013/11/silver-apple-logo.png?w=360",
-            "customer":"apple",
-            "credits":30
+            "customer":"apple"
         },
         {
             "id":3,
             "url":"http://blog.logomyway.com/wp-content/uploads/2013/05/bmw-logo.jpg",
-            "customer":"bmw",
-            "credits":50
+            "customer":"bmw"
         },
         {
             "id":4,
             "url":"http://upload.wikimedia.org/wikipedia/en/archive/a/a9/20140331161125!Logitech_logo.png",
-            "customer":"logitech",
-            "credits":120
+            "customer":"logitech"
         },
         {
             "id":5,
             "url":"http://www.elmec.com/ElmecCom2014v3/images/tplpage/logo_elmec_IT.png",
-            "customer":"elmec",
-            "credits":40
+            "customer":"elmec"
         }
     ]
 }

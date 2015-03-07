@@ -13,6 +13,7 @@ import java.util.List;
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
+import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.social.ShowCampaign;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.EmberTokenInvalid;
@@ -78,7 +79,7 @@ public class CampaignFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            client = new ClientStub(getActivity());
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -171,22 +172,30 @@ public class CampaignFragment extends Fragment {
                         total.append(line);
                     }
                     campaign_json = total.toString();
-                    JSONObject o = new JSONObject(campaign_json);
-                    JSONArray aa = o.getJSONArray("data");
-                    int number_of_campaigns = aa.length();
-                    for (int i=0; i<number_of_campaigns;i++){
-                        JSONObject obj = aa.getJSONObject(i);
-                        CompanyCampaign c = new CompanyCampaign(
-                                obj.getLong("id"),
-                                obj.getString("url"),
-                                obj.getString("customer"),
-                                obj.getInt("credits"));
-                        Log.e("","url="+c.getUrl());
-                        campaignList.add(c);
-                    }
                 }
+                JSONObject o = new JSONObject(campaign_json);
+                JSONArray aa = o.getJSONArray("data");
+                int number_of_campaigns = aa.length();
+                for (int i=0; i<number_of_campaigns;i++){
+                    JSONObject obj = aa.getJSONObject(i);
+                    CompanyCampaign c = new CompanyCampaign(
+                            obj.getLong("id"),
+                            obj.getString("url"),
+                            obj.getString("customer"));
+                    Log.e("","url="+c.getUrl());
+                    campaignList.add(c);
+                }
+
             } catch (IOException | EmberTokenInvalid | JSONException e) {
                 e.printStackTrace();
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
 
             for (CompanyCampaign c : campaignList) {

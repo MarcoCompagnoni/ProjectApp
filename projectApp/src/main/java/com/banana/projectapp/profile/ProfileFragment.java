@@ -9,11 +9,11 @@ import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.EmberTokenInvalid;
-import com.banana.projectapp.exception.SocialAccountInvalid;
+import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.SocialTypeInvalid;
 import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.main.LoginActivity;
 import com.banana.projectapp.main.MainFragmentActivity;
-import com.banana.projectapp.social.ChooseSocial;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -82,7 +82,7 @@ public class ProfileFragment extends Fragment{
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         try {
-            client = new ClientStub(getActivity());
+            client = new ClientStub();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -119,7 +119,7 @@ public class ProfileFragment extends Fragment{
         email = (TextView) rootView.findViewById(R.id.email);
         email.setText(DataHolder.getEmail());
         email.invalidate();
-        TextView credits = (TextView) rootView.findViewById(R.id.numero_crediti);
+        credits = (TextView) rootView.findViewById(R.id.numero_crediti);
         credits.setText(DataHolder.getCredits()+" CR");
         credits.invalidate();
 
@@ -230,7 +230,7 @@ public class ProfileFragment extends Fragment{
                         if (deleteAccountTask != null){
                             return;
                         }
-                        deleteAccountTask = new DeleteAccountTask(DataHolder.getEmail());
+                        deleteAccountTask = new DeleteAccountTask();
                         deleteAccountTask.execute((Void) null);
                         break;
                     case DialogInterface.BUTTON_NEGATIVE:
@@ -288,16 +288,28 @@ public class ProfileFragment extends Fragment{
         @Override
         protected Boolean doInBackground(Void... params) {
 
+            if (!LoginActivity.isEmailValid(mEmail))
+                return false;
+
             try {
                 if (DataHolder.testing) {
+                    Log.i("","chiamo client.change password con "+mEmail);
                     String ember_token = DataHolder.getToken();
                     client.changeEmail(mEmail, ember_token);
                 }
             } catch (UserInvalid | EmberTokenInvalid | IOException userInvalid) {
                 userInvalid.printStackTrace();
+                return false;
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
-
-            return LoginActivity.isEmailValid(mEmail);
+            return true;
         }
 
         @Override
@@ -331,15 +343,26 @@ public class ProfileFragment extends Fragment{
 
         @Override
         protected Boolean doInBackground(Void... params) {
+            if (!LoginActivity.isPasswordValid(mPassword))
+                return false;
 
             try {
                 if (DataHolder.testing) {
+                    Log.i("","chiamo client.change password con "+mPassword);
                     String ember_token = DataHolder.getToken();
                     client.changePassword(mPassword, ember_token);
                 }
-                return true;
             } catch (IOException | EmberTokenInvalid e) {
                 e.printStackTrace();
+                return false;
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
 
             return true;
@@ -348,6 +371,9 @@ public class ProfileFragment extends Fragment{
         @Override
         protected void onPostExecute(final Boolean success) {
             changePasswordTask = null;
+            if (!success){
+                Toast.makeText(getActivity(),"password is too short",Toast.LENGTH_SHORT).show();
+            }
         }
 
         @Override
@@ -359,34 +385,40 @@ public class ProfileFragment extends Fragment{
 
     private class DeleteAccountTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mEmail;
-
-        DeleteAccountTask(String email) {
-            mEmail = email;
-        }
+        DeleteAccountTask() {}
 
         @Override
         protected Boolean doInBackground(Void... params) {
 
             try {
                 if (DataHolder.testing) {
+                    Log.i("","chiamo client.deleteaccount "+DataHolder.getToken());
                     String ember_token = DataHolder.getToken();
-                    client.deleteYourAccount(mEmail, ember_token);
+                    client.deleteYourAccount(ember_token);
                 }
                 return true;
-            } catch (IOException | EmberTokenInvalid | UserInvalid e) {
+            } catch (IOException | EmberTokenInvalid e) {
                 e.printStackTrace();
+                return false;
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
-
-            return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
             deleteAccountTask = null;
-            DataHolder.setToken(null);
-            Intent intent = new Intent(getActivity(),LoginActivity.class);
-            startActivity(intent);
+            if (success) {
+                DataHolder.setToken(null);
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                startActivity(intent);
+            }
         }
 
         @Override
@@ -410,24 +442,36 @@ public class ProfileFragment extends Fragment{
             try {
                 if (DataHolder.testing) {
                     String ember_token = DataHolder.getToken();
+                    Log.i("","chiamo client.delete social");
                     client.deleteSocial(mSocialType, ember_token);
                 }
                 return true;
-            } catch (IOException | EmberTokenInvalid | SocialAccountInvalid e) {
+            } catch (IOException | EmberTokenInvalid | SocialTypeInvalid e) {
                 e.printStackTrace();
+                return false;
+            } catch (NoConnectionException e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return false;
             }
-
-            return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            DBManager db = new DBManager(getActivity());
-            db.open();
-            db.remove(mSocialType, "SOCIALS");
-            socials = db.getSocials();
-            adapter.notifyDataSetChanged();
-            db.close();
+            if (success) {
+                DBManager db = new DBManager(getActivity());
+                db.open();
+                db.remove(mSocialType, "SOCIALS");
+                socials = db.getSocials();
+                adapter.notifyDataSetChanged();
+                db.close();
+            } else {
+                Toast.makeText(getActivity(),"c'è stato qualche imprevisto nel cancellare il social biricchino",Toast.LENGTH_SHORT).show();
+            }
             deleteSocialTask = null;
         }
 
