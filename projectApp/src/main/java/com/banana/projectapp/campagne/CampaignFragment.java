@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +15,7 @@ import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.social.ShowCampaign;
 import com.banana.projectapp.R;
-import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 
 import android.app.Activity;
@@ -78,11 +77,9 @@ public class CampaignFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        try {
-            client = new ClientStub();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+
+        client = new ClientStub();
+
     }
 
     @Override
@@ -99,7 +96,7 @@ public class CampaignFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.campagne, container,
                 false);
         TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
-        nome.setText(DataHolder.getEmail());
+        nome.setText(DataHolder.getUserName());
         nome.invalidate();
 
         credits = (TextView) rootView.findViewById(R.id.numero_crediti);
@@ -133,7 +130,6 @@ public class CampaignFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                Toast.makeText(getActivity(), campaigns.get(position).getName(), Toast.LENGTH_SHORT).show();
                 DataHolder.setCampaign(campaigns.get(position));
                 Intent intent = new Intent(getActivity(),ShowCampaign.class);
                 startActivityForResult(intent,1);
@@ -161,7 +157,7 @@ public class CampaignFragment extends Fragment {
 
             try {
                 if (DataHolder.testing) {
-                    String ember_token = DataHolder.getToken();
+                    String ember_token = DataHolder.getAuthToken();
                     campaign_json = client.synchronizeCampaigns(ember_token);
                 } else {
                     InputStream inputStream = getResources().openRawResource(R.raw.campaigns);
@@ -181,12 +177,13 @@ public class CampaignFragment extends Fragment {
                     CompanyCampaign c = new CompanyCampaign(
                             obj.getLong("id"),
                             obj.getString("url"),
-                            obj.getString("customer"));
+                            obj.getString("customer"),
+                            obj.getInt("userGain"));
                     Log.e("","url="+c.getUrl());
                     campaignList.add(c);
                 }
 
-            } catch (IOException | EmberTokenInvalid | JSONException e) {
+            } catch (IOException | AuthTokenInvalid | JSONException e) {
                 e.printStackTrace();
             } catch (NoConnectionException e) {
                 getActivity().runOnUiThread(new Runnable() {

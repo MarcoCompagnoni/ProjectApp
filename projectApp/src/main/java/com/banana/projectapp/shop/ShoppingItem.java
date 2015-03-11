@@ -7,9 +7,9 @@ public class ShoppingItem {
     private String url;
 	private Bitmap logo;
 	private String name;
-	private int credits;
+	private float credits;
 
-    public ShoppingItem(long id, String url, Bitmap logo, String name, int credits){
+    public ShoppingItem(long id, String url, Bitmap logo, String name, float credits){
         this.id = id;
         this.url = url;
         this.logo = logo;
@@ -17,7 +17,7 @@ public class ShoppingItem {
         this.credits = credits;
     }
 
-	public ShoppingItem(long id, String url, String name, int credits){
+	public ShoppingItem(long id, String url, String name, float credits){
         this.id = id;
 		this.url = url;
 		this.name = name;
@@ -36,10 +36,10 @@ public class ShoppingItem {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public int getCredits() {
+	public float getCredits() {
 		return credits;
 	}
-	public void setCredits(int credits) {
+	public void setCredits(float credits) {
 		this.credits = credits;
 	}
     public long getId() {

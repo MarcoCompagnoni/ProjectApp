@@ -55,6 +55,7 @@ public class CampaignAdapter extends BaseAdapter {
 		CompanyCampaign campagna = companies.get(position);
 		holder.avatar.setImageBitmap(campagna.getLogo());
 		holder.name.setText(campagna.getName());
+        holder.credits.setText(campagna.getUserGain()+ " CR");
 		
 		return view;
 	}

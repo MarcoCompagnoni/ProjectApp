@@ -1,6 +1,6 @@
 package com.banana.projectapp.social;
 
-import java.net.UnknownHostException;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
@@ -8,8 +8,18 @@ import java.util.Calendar;
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
 import com.banana.projectapp.communication.ClientStub;
+import com.banana.projectapp.exception.AuthTokenInvalid;
+import com.banana.projectapp.exception.CampaignInvalid;
+import com.banana.projectapp.exception.LocationInvalid;
+import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.PostInvalid;
+import com.banana.projectapp.exception.SocialAccountTokenInvalid;
+import com.banana.projectapp.exception.SocialTypeInvalid;
+import com.banana.projectapp.main.MainFragmentActivity;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -18,6 +28,7 @@ import android.content.pm.Signature;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
@@ -28,22 +39,22 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ShowCampaign extends ActionBarActivity {
 
     ClientStub client;
     Location myLocation;
-	
+    TextView geoView;
+    Button confirm;
+    ParticipateCampaignTask participateCampaignTask;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    this.setContentView(R.layout.show_campaign);
 
-        try {
-            client = new ClientStub();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        client = new ClientStub();
 
         ImageView image = (ImageView) findViewById(R.id.logo_campagna);
         image.setImageBitmap(DataHolder.getCampaign().getLogo());
@@ -52,10 +63,21 @@ public class ShowCampaign extends ActionBarActivity {
         name.setText(DataHolder.getCampaign().getName());
         name.invalidate();
         TextView credits = (TextView) findViewById(R.id.crediti_campagna);
-        credits.setText(DataHolder.getValue()+" CR");
+        credits.setText(DataHolder.getCampaign().getUserGain()+" CR");
         credits.invalidate();
+        geoView = (TextView) findViewById(R.id.geoView);
+        confirm = (Button) findViewById(R.id.geoButton);
+        confirm.setOnClickListener(new View.OnClickListener(){
 
-        setupGeoView();
+            @Override
+            public void onClick(View v) {
+                participateCampaignTask = new ParticipateCampaignTask();
+                participateCampaignTask.execute((Void) null);
+                Log.e("","lancio participate campaign task");
+            }
+        });
+
+        getGeoLocation();
 	    getApplicationHASH();
 	    
 	}
@@ -77,6 +99,8 @@ public class ShowCampaign extends ActionBarActivity {
 
 	@Override
 	public void onDestroy() {
+        if (participateCampaignTask != null)
+            participateCampaignTask.cancel(true);
 	    super.onDestroy();
 	}
 
@@ -119,16 +143,6 @@ public class ShowCampaign extends ActionBarActivity {
 		return null;
 	}
 
-    private void setupGeoView(){
-        Button button = (Button) findViewById(R.id.geoButton);
-        button.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                getGeoLocation();
-            }
-        });
-    }
-
     public void getGeoLocation(){
         final LocationManager locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
@@ -144,8 +158,9 @@ public class ShowCampaign extends ActionBarActivity {
                     myLocation = location;
                     locationManager.removeUpdates(this);
                     DataHolder.setLocation(myLocation);
-                    Intent intent = new Intent (ShowCampaign.this,ParticipateCampaign.class);
-                    startActivity(intent);
+                    geoView.setText(myLocation.getLatitude()+","+myLocation.getLongitude());
+                    geoView.invalidate();
+                    confirm.setEnabled(true);
 
                 }
                 @Override
@@ -155,6 +170,60 @@ public class ShowCampaign extends ActionBarActivity {
                 @Override
                 public void onProviderDisabled(String provider) {}
             });
+        }
+    }
+    private class ParticipateCampaignTask extends AsyncTask<Void, Void, Boolean> {
+
+        ParticipateCampaignTask() {}
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try {
+                if (DataHolder.testing) {
+                    String ember_token = DataHolder.getAuthToken();
+
+                    Log.e("","client.participate campaign");
+                    client.participateCampaign(
+                            (int)DataHolder.getCampaign().getId(),
+                            DataHolder.SocialType.FACEBOOK,
+                            DataHolder.getLocation().getLatitude(),
+                            DataHolder.getLocation().getLongitude(),
+                            ember_token);
+                    return true;
+                } else {
+                    return true;
+                }
+
+            } catch (IOException | AuthTokenInvalid | CampaignInvalid |
+                    SocialAccountTokenInvalid | PostInvalid | LocationInvalid | SocialTypeInvalid e) {
+                e.printStackTrace();
+            } catch (NoConnectionException e) {
+                ShowCampaign.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ShowCampaign.this,"No connection",Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            participateCampaignTask = null;
+            if (success) {
+                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getUserGain());
+                Intent intent = new Intent(ShowCampaign.this, MainFragmentActivity.class);
+                startActivity(intent);
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            participateCampaignTask = null;
+            super.onCancelled();
         }
     }
 }

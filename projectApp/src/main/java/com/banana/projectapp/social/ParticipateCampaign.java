@@ -17,7 +17,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,36 +24,25 @@ import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.CampaignInvalid;
-import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.AuthTokenInvalid;
+import com.banana.projectapp.exception.LocationInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.PostInvalid;
+import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.SocialTypeInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
-import com.facebook.Request;
-import com.facebook.Response;
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.UiLifecycleHelper;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 public class ParticipateCampaign extends ActionBarActivity {
 
-    private Session session;
     private static final String TAG = "MainFragment";
-    ArrayAdapter placeArrayAdapter;
-    private UiLifecycleHelper uiHelper;
     ClientStub client;
-    ArrayList<String> places = new ArrayList<>();
-    JSONArray posts;
-
     ParticipateCampaignTask participateCampaignTask;
 
     @Override
@@ -101,44 +89,27 @@ public class ParticipateCampaign extends ActionBarActivity {
             }
         });
 
+        client = new ClientStub();
 
-        uiHelper = new UiLifecycleHelper(this, callback);
 
-        try {
-            client = new ClientStub();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-
-        setupListAdapter();
+//        setupListAdapter();
         getApplicationHASH();
-
-        uiHelper.onCreate(savedInstanceState);
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        this.session = Session.getActiveSession();
-        if (session != null &&
-                (session.isOpened() || session.isClosed()) ) {
-            onSessionStateChange(session, session.getState());
-        }
-        //getPosts();
-        uiHelper.onResume();
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        uiHelper.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        uiHelper.onPause();
     }
 
     @Override
@@ -146,21 +117,13 @@ public class ParticipateCampaign extends ActionBarActivity {
         if (participateCampaignTask != null)
             participateCampaignTask.cancel(true);
         super.onDestroy();
-        uiHelper.onDestroy();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        uiHelper.onSaveInstanceState(outState);
     }
 
-    private Session.StatusCallback callback = new Session.StatusCallback() {
-        @Override
-        public void call(Session session, SessionState state, Exception exception) {
-            onSessionStateChange(session, state);
-        }
-    };
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -195,59 +158,11 @@ public class ParticipateCampaign extends ActionBarActivity {
         return null;
     }
 
-    protected void getPosts(){
-        final Request posts_request = Request.newGraphPathRequest(session
-                , "/me/feed", new Request.Callback(){
-            @Override
-            public void onCompleted(Response response){
-                final JSONObject postsConnection = response.getGraphObject().getInnerJSONObject();
-                new Thread(){
-                    public void run(){
-                        try {
-                            posts = postsConnection.getJSONArray("data");
-                            int number_of_posts = posts.length();
-                            for (int i=0; i<number_of_posts;i++){
-                                JSONObject post = posts.getJSONObject(i);
-                                JSONObject place = post.getJSONObject("place");
-                                places.add(place.getString("name"));
-                                Log.i(TAG, place.toString());
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        ParticipateCampaign.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                placeArrayAdapter.notifyDataSetChanged();
-                            }
-                        });
-                    }
-                }.start();
-            }
-        } );
-        Bundle params = new Bundle();
-        params.putString("with", "location");
-        posts_request.setParameters(params);
-        posts_request.executeAsync();
-        Log.i(TAG, "execute get posts");
-    }
-
-    private void setupListAdapter() {
-        placeArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, places);
-        ListView listView = (ListView) findViewById(R.id.postList);
-        listView.setAdapter(placeArrayAdapter);
-    }
-
-    private void onSessionStateChange(Session session, SessionState state) {
-        this.session = session;
-        if (state.isOpened()) {
-            Log.i(TAG, "Logged in...");
-
-        } else if (state.isClosed()) {
-            Log.i(TAG, "Logged out...");
-        }
-    }
+//    private void setupListAdapter() {
+//        placeArrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, places);
+//        ListView listView = (ListView) findViewById(R.id.postList);
+//        listView.setAdapter(placeArrayAdapter);
+//    }
 
     private class ParticipateCampaignTask extends AsyncTask<Void, Void, Boolean> {
 
@@ -258,7 +173,7 @@ public class ParticipateCampaign extends ActionBarActivity {
 
             try {
                 if (DataHolder.testing) {
-                    String ember_token = DataHolder.getToken();
+                    String ember_token = DataHolder.getAuthToken();
 
                     Log.e("","client.participate campaign");
                     client.participateCampaign(
@@ -269,7 +184,7 @@ public class ParticipateCampaign extends ActionBarActivity {
                             ember_token);
                 }
 
-            } catch (IOException | EmberTokenInvalid | CampaignInvalid e) {
+            } catch (IOException | AuthTokenInvalid | CampaignInvalid e) {
                 e.printStackTrace();
                 return false;
             } catch (NoConnectionException e) {
@@ -280,6 +195,14 @@ public class ParticipateCampaign extends ActionBarActivity {
                     }
                 });
                 return false;
+            } catch (SocialTypeInvalid socialTypeInvalid) {
+                socialTypeInvalid.printStackTrace();
+            } catch (SocialAccountTokenInvalid socialAccountTokenInvalid) {
+                socialAccountTokenInvalid.printStackTrace();
+            } catch (PostInvalid postInvalid) {
+                postInvalid.printStackTrace();
+            } catch (LocationInvalid locationInvalid) {
+                locationInvalid.printStackTrace();
             }
 
             return true;
@@ -289,7 +212,7 @@ public class ParticipateCampaign extends ActionBarActivity {
         protected void onPostExecute(final Boolean success) {
             participateCampaignTask = null;
             if (success) {
-                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getValue());
+                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getUserGain());
                 Intent intent = new Intent(ParticipateCampaign.this, MainFragmentActivity.class);
                 startActivity(intent);
             }

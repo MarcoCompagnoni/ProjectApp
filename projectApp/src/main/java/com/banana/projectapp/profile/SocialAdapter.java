@@ -9,11 +9,10 @@ import com.banana.projectapp.R;
 import com.banana.projectapp.R.id;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
-import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.SocialTypeInvalid;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.view.LayoutInflater;
@@ -30,17 +29,15 @@ public class SocialAdapter extends BaseAdapter {
 	List<Social> socials;
     ClientStub client;
     Context context;
-    DeleteSocialTask deleteSocialTask;
+//    DeleteSocialTask deleteSocialTask;
 
 	
 	public SocialAdapter(Context context, List<Social> socials) {
 		mInflater = LayoutInflater.from(context);
 		this.socials = socials;
-        try {
-            client = new ClientStub();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+
+        client = new ClientStub();
+
     }
 
 	@Override
@@ -81,11 +78,11 @@ public class SocialAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 Toast.makeText(v.getContext(),"rimuovo "+social.getName(),Toast.LENGTH_SHORT).show();
-                if (deleteSocialTask!=null) {
-                    return;
-                }
-                deleteSocialTask = new DeleteSocialTask((int)social.getId());
-                deleteSocialTask.execute((Void)null);
+//                if (deleteSocialTask!=null) {
+//                    return;
+//                }
+//                deleteSocialTask = new DeleteSocialTask((int)social.getId());
+//                deleteSocialTask.execute((Void)null);
 
             }
         });
@@ -99,52 +96,52 @@ public class SocialAdapter extends BaseAdapter {
         public Button button;
 	}
 
-    private class DeleteSocialTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final int mSocialType;
-
-        DeleteSocialTask(int socialType) {
-            mSocialType = socialType;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-
-            try {
-                if (DataHolder.testing) {
-                    String ember_token = DataHolder.getToken();
-                    client.deleteSocial(mSocialType, ember_token);
-                }
-                return true;
-            } catch (IOException | EmberTokenInvalid | SocialTypeInvalid e) {
-                e.printStackTrace();
-            } catch (NoConnectionException e) {
-                Toast.makeText(context,"No connection",Toast.LENGTH_SHORT).show();
-                return false;
-            }
-
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            if (success) {
-                DBManager db = new DBManager(context);
-                db.open();
-                db.remove(mSocialType, "SOCIALS");
-                socials = db.getSocials();
-                db.close();
-                notifyDataSetChanged();
-                deleteSocialTask = null;
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-
-            deleteSocialTask = null;
-            super.onCancelled();
-        }
-    }
+//    private class DeleteSocialTask extends AsyncTask<Void, Void, Boolean> {
+//
+//        private final int mSocialType;
+//
+//        DeleteSocialTask(int socialType) {
+//            mSocialType = socialType;
+//        }
+//
+//        @Override
+//        protected Boolean doInBackground(Void... params) {
+//
+//            try {
+//                if (DataHolder.testing) {
+//                    String ember_token = DataHolder.getAuthToken();
+//                    client.deleteSocial(mSocialType, ember_token);
+//                }
+//                return true;
+//            } catch (IOException | AuthTokenInvalid | SocialTypeInvalid e) {
+//                e.printStackTrace();
+//            } catch (NoConnectionException e) {
+//                Toast.makeText(context,"No connection",Toast.LENGTH_SHORT).show();
+//                return false;
+//            }
+//
+//            return true;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(final Boolean success) {
+//            if (success) {
+//                DBManager db = new DBManager(context);
+//                db.open();
+//                db.remove(mSocialType, "SOCIALS");
+//                socials = db.getSocials();
+//                db.close();
+//                notifyDataSetChanged();
+//                deleteSocialTask = null;
+//            }
+//        }
+//
+//        @Override
+//        protected void onCancelled() {
+//
+//            deleteSocialTask = null;
+//            super.onCancelled();
+//        }
+//    }
 
 }

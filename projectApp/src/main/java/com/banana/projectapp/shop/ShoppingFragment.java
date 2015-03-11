@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +13,8 @@ import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.R;
-import com.banana.projectapp.exception.CouponInvalid;
-import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.CouponTypeInvalid;
+import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.main.MainFragmentActivity;
 
@@ -73,11 +72,8 @@ public class ShoppingFragment extends Fragment{
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-        try {
-            client = new ClientStub();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+
+        client = new ClientStub();
     }
 
     @Override
@@ -95,7 +91,7 @@ public class ShoppingFragment extends Fragment{
 		View rootView = inflater.inflate(R.layout.shopping, container,
 				false);
 		TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
-		nome.setText(DataHolder.getEmail());
+		nome.setText(DataHolder.getUserName());
 		nome.invalidate();
         creditsText = (TextView) rootView.findViewById(R.id.numero_crediti);
         creditsText.setText(DataHolder.getCredits()+" CR");
@@ -172,8 +168,8 @@ public class ShoppingFragment extends Fragment{
 
             try {
                 if (DataHolder.testing) {
-                    String ember_token = DataHolder.getToken();
-                    coupon_json = client.synchronizeCoupons(ember_token);
+                    String ember_token = DataHolder.getAuthToken();
+                    coupon_json = client.synchronizeCouponTypes(ember_token);
                 } else {
                     InputStream inputStream = getResources().openRawResource(R.raw.coupon_types);
                     BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
@@ -196,7 +192,7 @@ public class ShoppingFragment extends Fragment{
                             obj.getInt("credits"));
                     couponList.add(s);
                 }
-            } catch (IOException | EmberTokenInvalid | JSONException e) {
+            } catch (IOException | AuthTokenInvalid | JSONException e) {
                 e.printStackTrace();
             } catch (NoConnectionException e) {
                 getActivity().runOnUiThread(new Runnable() {
@@ -263,7 +259,7 @@ public class ShoppingFragment extends Fragment{
                     return false;
 
                 if (DataHolder.testing) {
-                    String ember_token = DataHolder.getToken();
+                    String ember_token = DataHolder.getAuthToken();
                     requested_coupon_json = client.requestCoupon(mCoupon, ember_token);
                 } else {
                     InputStream inputStream = getResources().openRawResource(R.raw.requested_coupon);
@@ -283,7 +279,7 @@ public class ShoppingFragment extends Fragment{
                 credits = data.getInt("credits");
                 code = data.getString("code");
 
-            } catch (JSONException | IOException | EmberTokenInvalid | CouponInvalid e1) {
+            } catch (JSONException | IOException | AuthTokenInvalid | CouponTypeInvalid e1) {
                 e1.printStackTrace();
             } catch (NoConnectionException e) {
                 getActivity().runOnUiThread(new Runnable() {

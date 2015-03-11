@@ -4,9 +4,8 @@ import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
 import com.banana.projectapp.campagne.CampaignFragment;
 import com.banana.projectapp.communication.ClientStub;
-import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
-import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.profile.ProfileFragment;
 import com.banana.projectapp.shop.ShoppingFragment;
 
@@ -29,7 +28,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 
 public class MainFragmentActivity extends ActionBarActivity implements
 		NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -39,7 +37,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
 	 * navigation drawer.
 	 */
 	private NavigationDrawerFragment mNavigationDrawerFragment;
-    private UserLogoutTask userLogoutTask = null;
+    //private UserLogoutTask userLogoutTask = null;
 
 	/**
 	 * Used to store the last screen title. For use in
@@ -47,6 +45,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
 	 */
 	private CharSequence mTitle;
     private ClientStub client;
+    private UserLogoutTask userLogoutTask;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +60,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
 		mNavigationDrawerFragment.setUp(R.id.navigation_drawer,
 				(DrawerLayout) findViewById(R.id.drawer_layout));
 
-        try {
-            client = new ClientStub();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        client = new ClientStub();
     }
 
     @Override
@@ -114,7 +109,8 @@ public class MainFragmentActivity extends ActionBarActivity implements
 				.beginTransaction()
 				.replace(R.id.container,
 						ProfileFragment.newInstance()).commit();
-		} else if (position==3){
+		}
+        else if (position==3){
 
             if (userLogoutTask!=null){
                 return;
@@ -210,6 +206,7 @@ public class MainFragmentActivity extends ActionBarActivity implements
 		}
 	}
 
+
     public class UserLogoutTask extends AsyncTask<Void, Void, Boolean> {
 
         UserLogoutTask() {}
@@ -219,11 +216,11 @@ public class MainFragmentActivity extends ActionBarActivity implements
 
             try {
                 if (DataHolder.testing) {
-                    Log.e("","chiamo logout con token "+DataHolder.getToken());
-                    client.logout(DataHolder.getToken());
+                    Log.e("","chiamo logout con token "+DataHolder.getAuthToken());
+                    client.logout(DataHolder.getAuthToken());
                 }
                 return true;
-            } catch (EmberTokenInvalid | IOException userInvalid) {
+            } catch (AuthTokenInvalid | IOException userInvalid) {
                 userInvalid.printStackTrace();
             } catch (NoConnectionException e) {
                 MainFragmentActivity.this.runOnUiThread(new Runnable() {
@@ -239,13 +236,14 @@ public class MainFragmentActivity extends ActionBarActivity implements
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            DataHolder.setToken(null);
             userLogoutTask = null;
             if (success){
-                Intent intent = new Intent(MainFragmentActivity.this,LoginActivity.class);
+                DataHolder.setAuthToken(null);
+                DataHolder.getSession().closeAndClearTokenInformation();
+                DataHolder.setSession(null);
+                Intent intent = new Intent(MainFragmentActivity.this,LoginFBActivity.class);
                 startActivity(intent);
             }
-
         }
 
         @Override
@@ -254,6 +252,4 @@ public class MainFragmentActivity extends ActionBarActivity implements
             super.onCancelled();
         }
     }
-
-
 }

@@ -7,18 +7,21 @@ public class CompanyCampaign {
     private String url;
 	private Bitmap logo;
 	private String name;
+    private float userGain;
 
-    public CompanyCampaign(long id, String url, String name){
+    public CompanyCampaign(long id, String url, String name, float userGain){
         this.setId(id);
         this.setUrl(url);
         this.setName(name);
+        this.setUserGain(userGain);
     }
 
-	public CompanyCampaign(long id, String url, Bitmap logo, String name){
+	public CompanyCampaign(long id, String url, Bitmap logo, String name, float userGain){
         this.setId(id);
         this.setUrl(url);
 		this.setLogo(logo);
 		this.setName(name);
+        this.setUserGain(userGain);
 	}
 	public Bitmap getLogo() {
 		return logo;
@@ -43,5 +46,13 @@ public class CompanyCampaign {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public float getUserGain() {
+        return userGain;
+    }
+
+    public void setUserGain(float userGain) {
+        this.userGain = userGain;
     }
 }

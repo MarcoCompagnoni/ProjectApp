@@ -1,7 +1,8 @@
 {
     "data":
         {
-            "credits":80,
-            "value":40
+            "firstname":"matteo",
+            "lastname":"tegnenti",
+            "photo":"https://fbcdn-profile-a.akamaihd.net/hprofile-ak-xap1/v/t1.0-1/c0.0.160.160/p160x160/559513_10205040974934521_1729241587138999410_n.jpg?oh=5ec7b76a2ef865140ff174d0b3042776&oe=5584062D&__gda__=1433819322_264741fb53be7384c5f5d87646c18020"
         }
 }

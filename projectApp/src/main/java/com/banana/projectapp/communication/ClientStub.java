@@ -3,13 +3,16 @@ package com.banana.projectapp.communication;
 import android.util.Log;
 
 import com.banana.projectapp.exception.ActivationNeeded;
+import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.AuthenticationFailure;
 import com.banana.projectapp.exception.CampaignInvalid;
-import com.banana.projectapp.exception.CouponInvalid;
+import com.banana.projectapp.exception.CouponTypeInvalid;
 import com.banana.projectapp.exception.EmailDuplicate;
-import com.banana.projectapp.exception.EmberTokenInvalid;
+import com.banana.projectapp.exception.LocationInvalid;
 import com.banana.projectapp.exception.MailException;
 import com.banana.projectapp.exception.NoConnectionException;
+import com.banana.projectapp.exception.PostInvalid;
+import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.SocialTypeInvalid;
 import com.banana.projectapp.exception.UserInvalid;
 
@@ -30,14 +33,12 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
-    public ClientStub() throws UnknownHostException {
-
-    }
+    public ClientStub() {}
 
     private void initialize() throws NoConnectionException {
         try{
 
-            InetAddress ADDRESS = InetAddress.getByName("192.168.1.12");
+            InetAddress ADDRESS = InetAddress.getByName("10.0.2.2");
             int PORT = 9000;
             sock = new Socket(ADDRESS, PORT);
             out = new ObjectOutputStream(new BufferedOutputStream(sock.getOutputStream()));
@@ -59,109 +60,56 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void registration(final String email, final String password)
-            throws NullPointerException, EmailDuplicate, MailException, IOException, NoConnectionException {
-
-        if (email == null) { throw new NullPointerException("missing email."); }
-        if (password == null) { throw new NullPointerException("missing password."); }
-
-
-
-                    initialize();
-                    out.writeObject("registration");
-                    out.writeObject(email);
-                    out.writeObject(password);
-                    out.flush();
-
-                    try {
-
-                        Object result = in.readObject();
-                        if (result instanceof EmailDuplicate) {
-                            throw (EmailDuplicate) result;
-                        } else if (result instanceof MailException) {
-                            throw (MailException) result;
-                        }
-                        if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG, "registrazione effettuata con successo");
-                            else
-                                Log.i(TAG, "problemi con la registrazione");
-                        } else {
-                            throw (IOException) result;
-                        }
-
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    } finally {
-                        try {
-
-                            close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-
-
-    }
-
-    @Override
-    public String login(final String email, final String password)
-            throws NullPointerException, UserInvalid, ActivationNeeded, AuthenticationFailure, IOException, NoConnectionException {
-
-        if (email == null) { throw new NullPointerException("missing email."); }
-        if (password == null) { throw new NullPointerException("missing password."); }
-
-                    initialize();
-                    out.writeObject("login");
-                    out.writeObject(email);
-                    out.writeObject(password);
-                    out.flush();
-                    Log.i(TAG,"login-scritti gli object");
-
-                    try {
-
-                        Object result = in.readObject();
-                        if (result instanceof UserInvalid) {
-                            throw (UserInvalid) result;
-                        } else if (result instanceof ActivationNeeded) {
-                            throw (ActivationNeeded) result;
-                        } else if (result instanceof AuthenticationFailure) {
-                            throw (AuthenticationFailure) result;
-                        } else if (result instanceof String) {
-                            return (String) result;
-                        } else {
-                            throw new IOException("input/output error");
-                        }
-
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-
-    }
-
-    @Override
-    public String getUserInfo(String ember_token) throws NullPointerException, EmberTokenInvalid, IOException, NoConnectionException {
-        if (ember_token == null) { throw new NullPointerException("missing token."); }
+    public void registration(final String facebookAccessToken)
+            throws SocialAccountTokenInvalid, IOException, NoConnectionException {
 
         initialize();
-        out.writeObject("getUserInfo");
-        out.writeObject(ember_token);
+        out.writeObject("registration");
+        out.writeObject(facebookAccessToken);
         out.flush();
 
         try {
 
             Object result = in.readObject();
-            if (result instanceof EmberTokenInvalid) {
-                throw (EmberTokenInvalid) result;
+            if (result instanceof SocialAccountTokenInvalid){
+                throw (SocialAccountTokenInvalid) result;
+            } else if (result instanceof String) {
+                if (result.equals("OK"))
+                    Log.i(TAG, "registrazione effettuata con successo");
+                else
+                    Log.i(TAG, "problemi con la registrazione");
+            } else {
+                throw (IOException) result;
+            }
+
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
+        } finally {
+            try {
+
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public String login(final String facebookAccessToken)
+            throws UserInvalid, SocialAccountTokenInvalid, IOException, NoConnectionException {
+
+        initialize();
+        out.writeObject("login");
+        out.writeObject(facebookAccessToken);
+        out.flush();
+
+        try {
+
+            Object result = in.readObject();
+            if (result instanceof UserInvalid) {
+                throw (UserInvalid) result;
+            } else if (result instanceof SocialAccountTokenInvalid) {
+                throw (SocialAccountTokenInvalid) result;
             } else if (result instanceof String) {
                 return (String) result;
             } else {
@@ -169,9 +117,8 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
             }
 
         } catch (ClassNotFoundException e) {
-            throw new IOException("input/output error");
-        }
-        finally {
+            throw new IOException("class not found");
+        } finally {
             try {
                 close();
             } catch (IOException e) {
@@ -181,182 +128,59 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void logout(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException, NoConnectionException {
-
-        if (ember_token == null) { throw new NullPointerException("missing email."); }
+    public String getUserInfo(final String authToken)
+            throws AuthTokenInvalid, IOException, NoConnectionException {
 
         initialize();
-                    out.writeObject("logout");
-                    out.writeObject(ember_token);
-                    out.flush();
 
-                    try {
+        out.writeObject("getUserInfo");
+        out.writeObject(authToken);
+        out.flush();
 
-                        Object result = in.readObject();
-                        if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"logout successfull");
-                            else
-                                Log.i(TAG,"problemi con il logout");
-                        } else { throw new IOException("input/output error"); }
+        try {
 
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            Object result = in.readObject();
+            if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof String) {
+                return (String) result;
+            } else { throw new IOException("input/output error"); }
+
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
+
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
-    @Override
-    public void deleteYourAccount(final String ember_token)
-            throws NullPointerException, EmberTokenInvalid, IOException, NoConnectionException {
-
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
-
-
-        initialize();
-                    out.writeObject("deleteYourAccount");
-                    out.writeObject(ember_token);
-                    out.flush();
-
-                    try {
-
-                        Object result = in.readObject();
-                        if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"account cancellato con successo");
-                            else
-                                Log.i(TAG,"problemi con la cancellazione");
-                        } else { throw new IOException("input/output error"); }
-
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-    }
 
     @Override
-    public void changeEmail(final String new_mail, final String ember_token)
-            throws NullPointerException, UserInvalid, EmberTokenInvalid, IOException, NoConnectionException {
-
-        if (new_mail == null) { throw new NullPointerException("missing email."); }
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
+    public float getCreditAmount(String authToken)
+            throws AuthTokenInvalid, IOException, NoConnectionException {
 
         initialize();
-                    out.writeObject("changeEmail");
-                    out.writeObject(new_mail);
-                    out.writeObject(ember_token);
-                    out.flush();
+        out.writeObject("getCreditAmount");
+        out.writeObject(authToken);
+        out.flush();
 
-                    try {
+        try {
 
-                        Object result = in.readObject();
-                        if (result instanceof UserInvalid) { throw (UserInvalid) result; }
-                        else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof EmailDuplicate) {throw (EmailDuplicate) result;}
-                        else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"mail cambiata con successo");
-                            else
-                                Log.i(TAG,"problemi con il cambio mail");
-                        } else { throw new IOException("input/output error"); }
-
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    } catch (EmailDuplicate emailDuplicate) {
-                        emailDuplicate.printStackTrace();
-                    } finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            Object result = in.readObject();
+            if (result instanceof AuthTokenInvalid) {
+                throw (AuthTokenInvalid) result;
+            } else if (result instanceof Float) {
+                return (Float) result;
+            } else {
+                throw new IOException("input/output error");
             }
 
-
-
-    @Override
-    public void changePassword(final String new_password, final String ember_token)
-            throws NullPointerException, EmberTokenInvalid, IOException, NoConnectionException {
-
-        if (new_password == null) { throw new NullPointerException("missing password."); }
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
-
-
-
-        initialize();
-                    out.writeObject("changePassword");
-                    out.writeObject(new_password);
-                    out.writeObject(ember_token);
-                    out.flush();
-
-                    try {
-
-                        Object result = in.readObject();
-                        if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"password cambiata con successo");
-                            else
-                                Log.i(TAG,"problemi con il cambio password");
-                        } else { throw new IOException("input/output error"); }
-
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                 finally {
-                    try {
-
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-    }
-
-    @Override
-     public void addSocial(final int social_type, final String info, final String ember_token)
-            throws NullPointerException, SocialTypeInvalid, EmberTokenInvalid, IOException, NoConnectionException {
-
-        if (info == null) { throw new NullPointerException("missing information."); }
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
-
-
-            initialize();
-            out.writeObject("addSocial");
-            out.writeObject(social_type);
-            out.writeObject(info);
-            out.writeObject(ember_token);
-            out.flush();
-        try {
-            Object result = in.readObject();
-            if (result instanceof SocialTypeInvalid) { throw (SocialTypeInvalid) result; }
-            else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-            else if (result instanceof String) {
-                if (result.equals("OK"))
-                    Log.i(TAG,"social aggiunto con successo");
-                else
-                    Log.i(TAG,"problemi con la aggiunta social");
-            } else { throw new IOException("input/output error"); }
         } catch (ClassNotFoundException e) {
-                throw new IOException("input/output error");
+            throw new IOException("class not found");
 
         } finally {
             try {
@@ -368,181 +192,205 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void deleteSocial(final int social_account, final String ember_token)
-            throws NullPointerException, EmberTokenInvalid, SocialTypeInvalid, IOException, NoConnectionException {
-
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
+    public void logout(final String authToken)
+            throws AuthTokenInvalid, IOException, NoConnectionException {
 
         initialize();
-                    out.writeObject("deleteSocial");
-                    out.writeObject(social_account);
-                    out.writeObject(ember_token);
-                    out.flush();
+        out.writeObject("logout");
+        out.writeObject(authToken);
+        out.flush();
 
-                    try {
+        try {
 
-                        Object result = in.readObject();
-                        if (result instanceof SocialTypeInvalid) { throw (SocialTypeInvalid) result; }
-                        else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"social cancellato con successo");
-                            else
-                                Log.i(TAG,"problemi con la cancellazione social");
-                        } else { throw new IOException("input/output error"); }
+            Object result = in.readObject();
+            if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof String) {
+                if (result.equals("OK"))
+                    Log.i(TAG,"logout successfull");
+                else
+                    Log.i(TAG,"problemi con il logout");
+            } else { throw new IOException("input/output error"); }
 
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
+
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
     @Override
-    public String synchronizeCampaigns(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException, NoConnectionException {
+    public void deleteYourAccount(final String authToken)
+            throws AuthTokenInvalid, IOException, NoConnectionException {
 
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
+        initialize();
+        out.writeObject("deleteYourAccount");
+        out.writeObject(authToken);
+        out.flush();
 
+        try {
+
+            Object result = in.readObject();
+            if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof String) {
+                if (result.equals("OK"))
+                    Log.i(TAG,"account cancellato con successo");
+                else
+                    Log.i(TAG,"problemi con la cancellazione");
+            } else { throw new IOException("input/output error"); }
+
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
+
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public String synchronizeCampaigns(final String authToken)
+            throws AuthTokenInvalid, IOException, NoConnectionException {
 
         initialize();
 
         out.writeObject("synchronizeCampaigns");
-                    out.writeObject(ember_token);
-                    out.flush();
+        out.writeObject(authToken);
+        out.flush();
 
-                    try {
+        try {
 
-                        Object result = in.readObject();
-                        if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            return (String) result;
-                        } else { throw new IOException("input/output error"); }
+            Object result = in.readObject();
+            if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof String) {
+                return (String) result;
+            } else { throw new IOException("input/output error"); }
 
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
+
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
     @Override
-    public void participateCampaign(final int campaign, final int social_type, double latitude,
-                                    double longitude, final String ember_token) throws NoConnectionException, IOException, CampaignInvalid, EmberTokenInvalid {
-
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
-
+    public void participateCampaign(int campaignID, int socialTypeID, double latitude, double longitude
+            , String authToken)
+            throws AuthTokenInvalid, SocialAccountTokenInvalid, CampaignInvalid, LocationInvalid,
+            PostInvalid, SocialTypeInvalid, IOException, NoConnectionException {
 
         initialize();
 
         out.writeObject("participateCampaign");
-                    out.writeObject(campaign);
-                    out.writeObject(social_type);
-                    out.writeObject(latitude);
-                    out.writeObject(longitude);
-                    out.writeObject(ember_token);
-                    out.flush();
+        out.writeObject(campaignID);
+        out.writeObject(socialTypeID);
+        out.writeObject(latitude);
+        out.writeObject(longitude);
+        out.writeObject(authToken);
+        out.flush();
 
-                    try {
+        try {
 
-                        Object result = in.readObject();
-                        if (result instanceof CampaignInvalid) { throw (CampaignInvalid) result; }
-                        else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            if (result.equals("OK"))
-                                Log.i(TAG,"partecipazione aggiunta con successo");
-                            else
-                                Log.i(TAG,"problemi con la aggiunta partecipazione");
-                        }
+            Object result = in.readObject();
+            if (result instanceof CampaignInvalid) { throw (CampaignInvalid) result; }
+            else if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof SocialAccountTokenInvalid) { throw (SocialAccountTokenInvalid) result; }
+            else if (result instanceof LocationInvalid) { throw (LocationInvalid) result; }
+            else if (result instanceof PostInvalid) { throw (PostInvalid) result; }
+            else if (result instanceof SocialTypeInvalid) { throw (SocialTypeInvalid) result; }
+            else if (result instanceof String) {
+                if (result.equals("OK"))
+                    Log.i(TAG,"partecipazione aggiunta con successo");
+                else
+                    Log.i(TAG,"problemi con la aggiunta partecipazione");
+            }
 
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
 
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
-    public String synchronizeCoupons(final String ember_token) throws NullPointerException, EmberTokenInvalid, IOException, NoConnectionException {
-
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
+    public String synchronizeCouponTypes(final String authToken)
+            throws AuthTokenInvalid, IOException, NoConnectionException {
 
         initialize();
 
-        out.writeObject("synchronizeCoupons");
-                    out.writeObject(ember_token);
-                    out.flush();
+        out.writeObject("synchronizeCouponTypes");
+        out.writeObject(authToken);
+        out.flush();
 
-                    try {
+        try {
 
-                        Object result = in.readObject();
-                        if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            return (String) result;
-                        } else { throw new IOException("input/output error"); }
+            Object result = in.readObject();
+            if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof String) {
+                return (String) result;
+            } else { throw new IOException("input/output error"); }
 
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
+
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
     @Override
-    public String requestCoupon(final int coupon, final String ember_token)
-            throws NullPointerException, EmberTokenInvalid, CouponInvalid, IOException, NoConnectionException {
-
-        if (ember_token == null) { throw new NullPointerException("missing ember token."); }
+    public String requestCoupon(final int couponTypeID, final String authToken)
+            throws AuthTokenInvalid, CouponTypeInvalid, IOException, NoConnectionException {
 
         initialize();
 
         out.writeObject("requestCoupon");
-                    out.writeObject(coupon);
-                    out.writeObject(ember_token);
-                    out.flush();
+        out.writeObject(couponTypeID);
+        out.writeObject(authToken);
+        out.flush();
 
-                    try {
+        try {
 
-                        Object result = in.readObject();
-                        if (result instanceof CouponInvalid) { throw (CouponInvalid) result; }
-                        else if (result instanceof EmberTokenInvalid) { throw (EmberTokenInvalid) result; }
-                        else if (result instanceof String) {
-                            return (String) result;
-                        } else { throw new IOException("input/output error"); }
+            Object result = in.readObject();
+            if (result instanceof CouponTypeInvalid) { throw (CouponTypeInvalid) result; }
+            else if (result instanceof AuthTokenInvalid) { throw (AuthTokenInvalid) result; }
+            else if (result instanceof String) {
+                return (String) result;
+            } else { throw new IOException("input/output error"); }
 
-                    } catch (ClassNotFoundException e) {
-                        throw new IOException("input/output error");
-                    }
-                 finally {
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+        } catch (ClassNotFoundException e) {
+            throw new IOException("class not found");
 
+        } finally {
+            try {
+                close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

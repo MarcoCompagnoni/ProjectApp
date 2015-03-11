@@ -41,6 +41,7 @@
             android:layout_below="@+id/info_location"
             android:layout_centerHorizontal="true" />
 
+    <!--
     <TextView
         android:id="@+id/spiegazione"
         android:text="Qui sotto puoi vedere gli ultimi luoghi in cui ti sei registrato, assicurati che compaia quello della campagna! :)"
@@ -58,6 +59,7 @@
         android:background="@android:color/white"
         android:layout_below="@+id/spiegazione">
     </ListView>
+    -->
 
 
 </RelativeLayout>
