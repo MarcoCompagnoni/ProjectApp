@@ -135,6 +135,7 @@ public class DBManager{
     }
 
     public List<Social> getSocials() throws SQLiteException{
+
         Cursor cursor = this.getAllEntries(SOCIALS_TABLE);		//prendo tutte le righe
         ArrayList<Social> list = new ArrayList<>();
         cursor.moveToFirst();
@@ -145,7 +146,7 @@ public class DBManager{
 
             Social newSocial = new Social(socialType,logo,name);	//creo l' account
 
-            list.add(0,newSocial);		//lo aggiungo alla lista
+            list.add(newSocial);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
         }
         cursor.close();
@@ -164,7 +165,7 @@ public class DBManager{
 
             CompanyCampaign newCampaign = new CompanyCampaign(id, url, logo, name, userGain);	//creo l' account
 
-            list.add(0,newCampaign);		//lo aggiungo alla lista
+            list.add(newCampaign);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
         }
         cursor.close();
@@ -183,7 +184,7 @@ public class DBManager{
 
             ShoppingItem newItem = new ShoppingItem(id, url, logo, name, credits);	//creo l' account
 
-            list.add(0,newItem);		//lo aggiungo alla lista
+            list.add(newItem);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
         }
         cursor.close();

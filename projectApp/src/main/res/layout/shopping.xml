@@ -31,19 +31,26 @@
             android:textSize="18sp" />
     </RelativeLayout>
 
-    <ListView
-        android:id="@+id/list_view"
-        android:layout_width="match_parent"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:background="#FFBBBB"
-        android:choiceMode="singleChoice"
-        android:divider="#FFFFFF"
-        android:dividerHeight="4dp"
-        android:layout_below="@+id/synchronizeCoupons" />
+        android:layout_width="wrap_content"
+        android:layout_below="@id/relative_layout">
 
+        <ListView
+            android:id="@+id/list_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:background="#FFBBBB"
+            android:choiceMode="singleChoice"
+            android:divider="#FFFFFF"
+            android:dividerHeight="4dp" />
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <!--
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -51,5 +58,6 @@
         android:id="@+id/synchronizeCoupons"
         android:layout_below="@+id/relative_layout"
         android:layout_centerHorizontal="true" />
+        -->
 
 </RelativeLayout>

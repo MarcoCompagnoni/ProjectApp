@@ -1,7 +1,6 @@
 package com.banana.projectapp;
 
 import android.location.Location;
-
 import com.banana.projectapp.campagne.CompanyCampaign;
 import com.banana.projectapp.profile.MyProfile;
 import com.facebook.Session;
@@ -10,7 +9,7 @@ public class DataHolder {
 
     private static MyProfile myProfile;
     private static String code = null;
-    public static boolean testing = true;
+    public static boolean testing = false;
     private static float credits = 0;
     private static CompanyCampaign campaign;
     private static String authToken = null;

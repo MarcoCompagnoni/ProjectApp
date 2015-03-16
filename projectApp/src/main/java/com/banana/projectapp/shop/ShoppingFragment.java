@@ -17,6 +17,7 @@ import com.banana.projectapp.exception.CouponTypeInvalid;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.main.MainFragmentActivity;
+import com.banana.projectapp.social.ShowCampaign;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -26,6 +27,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,6 +49,7 @@ public class ShoppingFragment extends Fragment{
     ClientStub client;
     SynchronizeCouponsTask synchronizeCouponsTask;
     RequestCouponTask requestCouponTask;
+    LoadShoppingTask loadShoppingTask;
     TextView creditsText;
     ShoppingItem requestedCoupon;
     String coupon_json;
@@ -60,11 +63,9 @@ public class ShoppingFragment extends Fragment{
     public void updateView(){
 
         DBManager db = new DBManager(getActivity()).open();
-        coupons = db.getShoppingItems();
+        coupons.clear();
+        coupons.addAll(db.getShoppingItems());
         db.close();
-
-        adapter = new ShoppingAdapter(getActivity(), coupons);
-        list.setAdapter(adapter);
 
         adapter.notifyDataSetChanged();
     }
@@ -72,7 +73,6 @@ public class ShoppingFragment extends Fragment{
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
         client = new ClientStub();
     }
 
@@ -82,10 +82,21 @@ public class ShoppingFragment extends Fragment{
             requestCouponTask.cancel(true);
         if (synchronizeCouponsTask != null)
             synchronizeCouponsTask.cancel(true);
+        if (loadShoppingTask != null)
+            loadShoppingTask.cancel(true);
         super.onDestroy();
     }
-	
-	@Override
+
+    @Override
+    public void onResume() {
+        if (loadShoppingTask == null) {
+            loadShoppingTask = new LoadShoppingTask();
+            loadShoppingTask.execute();
+        }
+        super.onResume();
+    }
+
+    @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.shopping, container,
@@ -97,53 +108,29 @@ public class ShoppingFragment extends Fragment{
         creditsText.setText(DataHolder.getCredits()+" CR");
         creditsText.invalidate();
 
-        final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);
-        synchronizeCoupons.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (synchronizeCouponsTask != null){
-                    return;
-                }
-
-                synchronizeCouponsTask = new SynchronizeCouponsTask();
-                synchronizeCouponsTask.execute((Void) null);
-            }
-        });
+//        final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);
+//        synchronizeCoupons.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (synchronizeCouponsTask != null){
+//                    return;
+//                }
+//
+//                synchronizeCouponsTask = new SynchronizeCouponsTask();
+//                synchronizeCouponsTask.execute((Void) null);
+//            }
+//        });
 
 		list = (ListView) rootView.findViewById(R.id.list_view);
-
-        DBManager db = new DBManager(getActivity()).open();
-        coupons = db.getShoppingItems();
-        db.close();
-
-        adapter = new ShoppingAdapter(getActivity(), coupons);
-        list.setAdapter(adapter);
-
-        final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefresh);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which){
-                    case DialogInterface.BUTTON_POSITIVE:
-                        if (requestCouponTask != null){
-                            return;
-                        }
-
-                        requestCouponTask = new RequestCouponTask((int)requestedCoupon.getId());
-                        requestCouponTask.execute((Void) null);
-                        break;
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        break;
-                }
-            }
-        };
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                requestedCoupon = coupons.get(position);
-                builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
+            public void onRefresh() {
+                if (synchronizeCouponsTask != null)
+                    return;
+                synchronizeCouponsTask = new SynchronizeCouponsTask();
+                synchronizeCouponsTask.execute();
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
 
@@ -203,6 +190,10 @@ public class ShoppingFragment extends Fragment{
                 });
                 return false;
             }
+
+            DBManager db = new DBManager(getActivity()).open();
+            db.deleteShoppingItems();
+
             for (ShoppingItem s : couponList) {
                 HttpURLConnection connection;
                 try {
@@ -212,24 +203,25 @@ public class ShoppingFragment extends Fragment{
                     InputStream input;
                     input = connection.getInputStream();
                     s.setLogo(BitmapFactory.decodeStream(input));
+                    db.insert(s);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateView();
+                        }
+                    });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 Log.e("aaa", "caricata immagine dal link " + s.getUrl());
             }
+            db.close();
             return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            DBManager db = new DBManager(getActivity()).open();
-            db.deleteShoppingItems();
-            for (ShoppingItem s: couponList){
-                db.insert(s);
-            }
-            db.close();
 
-            updateView();
             synchronizeCouponsTask = null;
         }
 
@@ -316,6 +308,60 @@ public class ShoppingFragment extends Fragment{
         @Override
         protected void onCancelled() {
             requestCouponTask = null;
+            super.onCancelled();
+        }
+    }
+
+    private class LoadShoppingTask extends AsyncTask<Void, Void, Boolean>{
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            DBManager db = new DBManager(getActivity()).open();
+            coupons = db.getShoppingItems();
+            db.close();
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                adapter = new ShoppingAdapter(getActivity(), coupons);
+                list.setAdapter(adapter);
+
+                final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which){
+                            case DialogInterface.BUTTON_POSITIVE:
+                                if (requestCouponTask != null){
+                                    return;
+                                }
+
+                                requestCouponTask = new RequestCouponTask((int)requestedCoupon.getId());
+                                requestCouponTask.execute((Void) null);
+                                break;
+                            case DialogInterface.BUTTON_NEGATIVE:
+                                break;
+                        }
+                    }
+                };
+                final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        requestedCoupon = coupons.get(position);
+                        builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+                                .setNegativeButton("No", dialogClickListener).show();
+                    }
+                });
+            }
+            loadShoppingTask = null;
+            super.onPostExecute(success);
+        }
+        @Override
+        protected void onCancelled() {
+            loadShoppingTask = null;
             super.onCancelled();
         }
     }

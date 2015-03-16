@@ -405,6 +405,8 @@ public class ProfileFragment extends Fragment{
             deleteAccountTask = null;
             if (success) {
                 DataHolder.setAuthToken(null);
+                DataHolder.getSession().closeAndClearTokenInformation();
+                DataHolder.setSession(null);
                 Intent intent = new Intent(getActivity(), LoginFBActivity.class);
                 startActivity(intent);
             }

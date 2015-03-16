@@ -151,6 +151,25 @@ public class ShowCampaign extends ActionBarActivity {
         if(recentLocation != null && recentLocation.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
             myLocation = recentLocation;
         } else {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
+
+                @Override
+                public void onLocationChanged(Location location) {
+                    myLocation = location;
+                    locationManager.removeUpdates(this);
+                    DataHolder.setLocation(myLocation);
+                    geoView.setText(myLocation.getLatitude()+","+myLocation.getLongitude());
+                    geoView.invalidate();
+                    confirm.setEnabled(true);
+
+                }
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {}
+                @Override
+                public void onProviderEnabled(String provider) {}
+                @Override
+                public void onProviderDisabled(String provider) {}
+            });
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, new LocationListener() {
 
                 @Override

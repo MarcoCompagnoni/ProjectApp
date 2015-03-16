@@ -24,12 +24,12 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,7 +44,9 @@ public class CampaignFragment extends Fragment {
 	ListView list;
     ClientStub client;
     SynchronizeCampaignTask synchronizeCampaignTask;
+    LoadCampaignTask loadCampaignTask;
     TextView credits;
+    SwipeRefreshLayout swipeRefreshLayout;
 
     String campaign_json;
     private List<CompanyCampaign> campaigns;
@@ -56,14 +58,10 @@ public class CampaignFragment extends Fragment {
     public void updateView(){
 
         DBManager db = new DBManager(getActivity()).open();
-        campaigns = db.getCampaigns();
+        campaigns.clear();
+        campaigns.addAll(db.getCampaigns());
         db.close();
-
-        adapter = new CampaignAdapter(getActivity(), campaigns);
-        list.setAdapter(adapter);
-
         adapter.notifyDataSetChanged();
-
         credits.setText(DataHolder.getCredits()+" CR");
         credits.invalidate();
     }
@@ -86,11 +84,21 @@ public class CampaignFragment extends Fragment {
     public void onDestroy(){
         if (synchronizeCampaignTask != null)
             synchronizeCampaignTask.cancel(true);
-
+        if (loadCampaignTask != null)
+            loadCampaignTask.cancel(true);
         super.onDestroy();
     }
-	
-	@Override
+
+    @Override
+    public void onResume() {
+        if (loadCampaignTask == null) {
+            loadCampaignTask = new LoadCampaignTask();
+            loadCampaignTask.execute();
+        }
+        super.onResume();
+    }
+
+    @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.campagne, container,
@@ -103,38 +111,32 @@ public class CampaignFragment extends Fragment {
         credits.setText(DataHolder.getCredits()+" CR");
         credits.invalidate();
 
-        final Button synchronizeCampaign = (Button) rootView.findViewById(R.id.synchronizeCampaign);
-        synchronizeCampaign.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (synchronizeCampaignTask != null){
-                    return;
-                }
-
-                synchronizeCampaignTask = new SynchronizeCampaignTask();
-                synchronizeCampaignTask.execute((Void) null);
-            }
-        });
+//        final Button synchronizeCampaign = (Button) rootView.findViewById(R.id.synchronizeCampaign);
+//        synchronizeCampaign.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (synchronizeCampaignTask != null){
+//                    return;
+//                }
+//                synchronizeCampaignTask = new SynchronizeCampaignTask();
+//                synchronizeCampaignTask.execute((Void) null);
+//            }
+//        });
 
         list = (ListView) rootView.findViewById(R.id.list_view);
+        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefresh);
 
-        DBManager db = new DBManager(getActivity()).open();
-        campaigns = db.getCampaigns();
-        db.close();
-
-        adapter = new com.banana.projectapp.campagne.CampaignAdapter(getActivity(), campaigns);
-        list.setAdapter(adapter);
-
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                DataHolder.setCampaign(campaigns.get(position));
-                Intent intent = new Intent(getActivity(),ShowCampaign.class);
-                startActivityForResult(intent,1);
+            public void onRefresh() {
+                if (synchronizeCampaignTask != null)
+                    return;
+                synchronizeCampaignTask = new SynchronizeCampaignTask();
+                synchronizeCampaignTask.execute();
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
+
 
 		return rootView;
 	}
@@ -169,6 +171,8 @@ public class CampaignFragment extends Fragment {
                     }
                     campaign_json = total.toString();
                 }
+
+
                 JSONObject o = new JSONObject(campaign_json);
                 JSONArray aa = o.getJSONArray("data");
                 int number_of_campaigns = aa.length();
@@ -178,7 +182,7 @@ public class CampaignFragment extends Fragment {
                             obj.getLong("id"),
                             obj.getString("url"),
                             obj.getString("customer"),
-                            obj.getInt("userGain"));
+                            (float)obj.getDouble("userGain"));
                     Log.e("","url="+c.getUrl());
                     campaignList.add(c);
                 }
@@ -195,6 +199,9 @@ public class CampaignFragment extends Fragment {
                 return false;
             }
 
+            DBManager db = new DBManager(getActivity()).open();
+            db.deleteCampaigns();
+
             for (CompanyCampaign c : campaignList) {
                 HttpURLConnection connection;
                 try {
@@ -204,30 +211,70 @@ public class CampaignFragment extends Fragment {
                     InputStream input;
                     input = connection.getInputStream();
                     c.setLogo(BitmapFactory.decodeStream(input));
+                    db.insert(c);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateView();
+                        }
+                    });
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 Log.e("aaa", "caricata immagine dal link " + c.getUrl());
             }
+            db.close();
             return true;
         }
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            DBManager db = new DBManager(getActivity()).open();
-            db.deleteCampaigns();
-            for (CompanyCampaign c: campaignList){
-                db.insert(c);
-            }
-            db.close();
 
-            updateView();
             synchronizeCampaignTask = null;
         }
 
         @Override
         protected void onCancelled() {
             synchronizeCampaignTask = null;
+            super.onCancelled();
+        }
+    }
+
+    private class LoadCampaignTask extends AsyncTask<Void, Void, Boolean>{
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            DBManager db = new DBManager(getActivity()).open();
+            campaigns = db.getCampaigns();
+            db.close();
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                adapter = new com.banana.projectapp.campagne.CampaignAdapter(getActivity(), campaigns);
+                list.setAdapter(adapter);
+
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        DataHolder.setCampaign(campaigns.get(position));
+                        Intent intent = new Intent(getActivity(), ShowCampaign.class);
+                        startActivityForResult(intent, 1);
+                    }
+                });
+            }
+
+            loadCampaignTask = null;
+            super.onPostExecute(success);
+        }
+        @Override
+        protected void onCancelled() {
+            loadCampaignTask = null;
             super.onCancelled();
         }
     }

@@ -2,14 +2,10 @@ package com.banana.projectapp.communication;
 
 import android.util.Log;
 
-import com.banana.projectapp.exception.ActivationNeeded;
 import com.banana.projectapp.exception.AuthTokenInvalid;
-import com.banana.projectapp.exception.AuthenticationFailure;
 import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.CouponTypeInvalid;
-import com.banana.projectapp.exception.EmailDuplicate;
 import com.banana.projectapp.exception.LocationInvalid;
-import com.banana.projectapp.exception.MailException;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.PostInvalid;
 import com.banana.projectapp.exception.SocialAccountTokenInvalid;
@@ -23,7 +19,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class ClientStub implements CommunicationProfileInterface, CommunicationCommercialInterface{
 
@@ -38,7 +33,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     private void initialize() throws NoConnectionException {
         try{
 
-            InetAddress ADDRESS = InetAddress.getByName("10.0.2.2");
+            InetAddress ADDRESS = InetAddress.getByName("172.25.16.143");
             int PORT = 9000;
             sock = new Socket(ADDRESS, PORT);
             out = new ObjectOutputStream(new BufferedOutputStream(sock.getOutputStream()));
