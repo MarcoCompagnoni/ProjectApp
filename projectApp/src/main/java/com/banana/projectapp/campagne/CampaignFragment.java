@@ -124,13 +124,23 @@ public class CampaignFragment extends Fragment {
 //        });
 
         list = (ListView) rootView.findViewById(R.id.list_view);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getActivity(),campaigns.get(position).getType().toString(),Toast.LENGTH_SHORT).show();
+            }
+        });
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefresh);
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (synchronizeCampaignTask != null)
+                if (synchronizeCampaignTask != null) {
+                    Log.i("","sincronizza non è nullo");
+                    swipeRefreshLayout.setRefreshing(false);
                     return;
+                }
+                Log.i("","creo sincronizza");
                 synchronizeCampaignTask = new SynchronizeCampaignTask();
                 synchronizeCampaignTask.execute();
                 swipeRefreshLayout.setRefreshing(false);
@@ -162,7 +172,7 @@ public class CampaignFragment extends Fragment {
                     String ember_token = DataHolder.getAuthToken();
                     campaign_json = client.synchronizeCampaigns(ember_token);
                 } else {
-                    InputStream inputStream = getResources().openRawResource(R.raw.campaigns);
+                    InputStream inputStream = getResources().openRawResource(R.raw.campaigns2);
                     BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder total = new StringBuilder();
                     String line;
@@ -178,17 +188,20 @@ public class CampaignFragment extends Fragment {
                 int number_of_campaigns = aa.length();
                 for (int i=0; i<number_of_campaigns;i++){
                     JSONObject obj = aa.getJSONObject(i);
+
                     CompanyCampaign c = new CompanyCampaign(
                             obj.getLong("id"),
                             obj.getString("url"),
                             obj.getString("customer"),
-                            (float)obj.getDouble("userGain"));
+                            (float)obj.getDouble("userGain"),
+                            CompanyCampaign.CampaignType.valueOf(obj.getString("type")));
                     Log.e("","url="+c.getUrl());
                     campaignList.add(c);
                 }
 
             } catch (IOException | AuthTokenInvalid | JSONException e) {
                 e.printStackTrace();
+                Log.e("","boh");
             } catch (NoConnectionException e) {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

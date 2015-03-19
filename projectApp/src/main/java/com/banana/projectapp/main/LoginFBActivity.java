@@ -208,6 +208,7 @@ public class LoginFBActivity extends ActionBarActivity{
                 return true;
             } catch (IOException | AuthTokenInvalid | SocialAccountTokenInvalid | UserInvalid e) {
                 e.printStackTrace();
+
             } catch (NoConnectionException e) {
                 LoginFBActivity.this.runOnUiThread(new Runnable() {
                     @Override

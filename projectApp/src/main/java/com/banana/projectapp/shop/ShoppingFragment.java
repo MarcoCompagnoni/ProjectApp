@@ -126,8 +126,12 @@ public class ShoppingFragment extends Fragment{
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (synchronizeCouponsTask != null)
+                if (synchronizeCouponsTask != null) {
+                    Log.i("","sincronizza non è nullo");
+                    swipeRefreshLayout.setRefreshing(false);
                     return;
+                }
+                Log.i("","creo sincronizza");
                 synchronizeCouponsTask = new SynchronizeCouponsTask();
                 synchronizeCouponsTask.execute();
                 swipeRefreshLayout.setRefreshing(false);

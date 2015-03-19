@@ -17,7 +17,7 @@ public interface CommunicationCommercialInterface {
     String synchronizeCampaigns(String authToken)
             throws AuthTokenInvalid, IOException, NoConnectionException;
 
-    void participateCampaign(int campaignID, int socialTypeID, double latitude, double longitude
+    String participateCampaign(int campaignID, int socialTypeID, double latitude, double longitude
             , String authToken)
             throws AuthTokenInvalid, SocialAccountTokenInvalid, CampaignInvalid, LocationInvalid,
             PostInvalid, SocialTypeInvalid, IOException, NoConnectionException;

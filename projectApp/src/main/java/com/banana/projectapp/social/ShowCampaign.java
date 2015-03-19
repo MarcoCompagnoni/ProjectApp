@@ -1,21 +1,27 @@
 package com.banana.projectapp.social;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
+import com.banana.projectapp.campagne.CompanyCampaign;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.CampaignInvalid;
+import com.banana.projectapp.exception.CouponTypeInvalid;
 import com.banana.projectapp.exception.LocationInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.PostInvalid;
 import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.SocialTypeInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
+import com.banana.projectapp.shop.ShowCode;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -40,6 +46,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ShowCampaign extends ActionBarActivity {
 
@@ -77,7 +86,12 @@ public class ShowCampaign extends ActionBarActivity {
             }
         });
 
-        getGeoLocation();
+        if (DataHolder.getCampaign().getType() != CompanyCampaign.CampaignType.PHOTO) {
+            getGeoLocation();
+            geoView.setVisibility(View.VISIBLE);
+        } else {
+            confirm.setEnabled(true);
+        }
 	    getApplicationHASH();
 	    
 	}
@@ -147,9 +161,13 @@ public class ShowCampaign extends ActionBarActivity {
         final LocationManager locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
 
-        Location recentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location recentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if(recentLocation != null && recentLocation.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
             myLocation = recentLocation;
+            DataHolder.setLocation(myLocation);
+            geoView.setText(myLocation.getLatitude()+","+myLocation.getLongitude());
+            geoView.invalidate();
+            confirm.setEnabled(true);
         } else {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
 
@@ -193,6 +211,7 @@ public class ShowCampaign extends ActionBarActivity {
     }
     private class ParticipateCampaignTask extends AsyncTask<Void, Void, Boolean> {
 
+        String code;
         ParticipateCampaignTask() {}
 
         @Override
@@ -203,14 +222,26 @@ public class ShowCampaign extends ActionBarActivity {
                     String ember_token = DataHolder.getAuthToken();
 
                     Log.e("","client.participate campaign");
-                    client.participateCampaign(
-                            (int)DataHolder.getCampaign().getId(),
-                            DataHolder.SocialType.FACEBOOK,
-                            DataHolder.getLocation().getLatitude(),
-                            DataHolder.getLocation().getLongitude(),
-                            ember_token);
+
+                    if (DataHolder.getCampaign().getType() != CompanyCampaign.CampaignType.PHOTO) {
+
+                        code = client.participateCampaign(
+                                (int) DataHolder.getCampaign().getId(),
+                                DataHolder.SocialType.FACEBOOK,
+                                DataHolder.getLocation().getLatitude(),
+                                DataHolder.getLocation().getLongitude(),
+                                ember_token);
+                    } else {
+                        client.participateCampaign(
+                                (int) DataHolder.getCampaign().getId(),
+                                DataHolder.SocialType.FACEBOOK,
+                                0,
+                                0,
+                                ember_token);
+                    }
                     return true;
                 } else {
+                    code ="w3Zad12";
                     return true;
                 }
 
@@ -233,9 +264,15 @@ public class ShowCampaign extends ActionBarActivity {
         protected void onPostExecute(final Boolean success) {
             participateCampaignTask = null;
             if (success) {
-                DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getUserGain());
-                Intent intent = new Intent(ShowCampaign.this, MainFragmentActivity.class);
-                startActivity(intent);
+                if (DataHolder.getCampaign().getType() == CompanyCampaign.CampaignType.PHOTO) {
+                    DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getUserGain());
+                    Intent intent = new Intent(ShowCampaign.this, MainFragmentActivity.class);
+                    startActivity(intent);
+                } else {
+                    DataHolder.setCode(code);
+                    Intent intent = new Intent(ShowCampaign.this, ShowCode.class);
+                    startActivity(intent);
+                }
             }
         }
 

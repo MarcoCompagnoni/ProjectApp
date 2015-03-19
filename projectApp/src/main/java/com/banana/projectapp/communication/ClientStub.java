@@ -33,7 +33,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     private void initialize() throws NoConnectionException {
         try{
 
-            InetAddress ADDRESS = InetAddress.getByName("172.25.16.143");
+            InetAddress ADDRESS = InetAddress.getByName("172.25.16.45");
             int PORT = 9000;
             sock = new Socket(ADDRESS, PORT);
             out = new ObjectOutputStream(new BufferedOutputStream(sock.getOutputStream()));
@@ -283,7 +283,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     }
 
     @Override
-    public void participateCampaign(int campaignID, int socialTypeID, double latitude, double longitude
+    public String participateCampaign(int campaignID, int socialTypeID, double latitude, double longitude
             , String authToken)
             throws AuthTokenInvalid, SocialAccountTokenInvalid, CampaignInvalid, LocationInvalid,
             PostInvalid, SocialTypeInvalid, IOException, NoConnectionException {
@@ -311,7 +311,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
                 if (result.equals("OK"))
                     Log.i(TAG,"partecipazione aggiunta con successo");
                 else
-                    Log.i(TAG,"problemi con la aggiunta partecipazione");
+                    return (String)result;
             }
 
         } catch (ClassNotFoundException e) {
@@ -324,6 +324,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
                 e.printStackTrace();
             }
         }
+        return null;
     }
 
     @Override

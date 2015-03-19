@@ -8,20 +8,25 @@ public class CompanyCampaign {
 	private Bitmap logo;
 	private String name;
     private float userGain;
+    private CampaignType type;
 
-    public CompanyCampaign(long id, String url, String name, float userGain){
+    public enum CampaignType {GEO,PHOTO,GEOPHOTO};
+
+    public CompanyCampaign(long id, String url, String name, float userGain, CampaignType type){
         this.setId(id);
         this.setUrl(url);
         this.setName(name);
         this.setUserGain(userGain);
+        this.setType(type);
     }
 
-	public CompanyCampaign(long id, String url, Bitmap logo, String name, float userGain){
+	public CompanyCampaign(long id, String url, Bitmap logo, String name, float userGain, CampaignType type){
         this.setId(id);
         this.setUrl(url);
 		this.setLogo(logo);
 		this.setName(name);
         this.setUserGain(userGain);
+        this.setType(type);
 	}
 	public Bitmap getLogo() {
 		return logo;
@@ -54,5 +59,13 @@ public class CompanyCampaign {
 
     public void setUserGain(float userGain) {
         this.userGain = userGain;
+    }
+
+    public CampaignType getType() {
+        return type;
+    }
+
+    public void setType(CampaignType type) {
+        this.type = type;
     }
 }

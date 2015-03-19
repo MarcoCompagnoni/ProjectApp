@@ -22,7 +22,7 @@ import com.banana.projectapp.shop.ShoppingItem;
 public class DBManager{
 
     public static final String DATABASE_NAME = "FRIENZ.db";
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 1;
 
     public static final String CAMPAIGNS_TABLE = "CAMPAIGNS";
     public static final String SOCIALS_TABLE = "SOCIALS";
@@ -33,6 +33,7 @@ public class DBManager{
     public static final String LOGO = "logo";
     public static final String NAME = "name";
     public static final String CREDITS = "credits";
+    public static final String TYPE = "type";
 
     private SQLiteDatabase db;
     private DBHelper dbHelper;
@@ -85,6 +86,7 @@ public class DBManager{
         values.put(LOGO, getBytes(campaign.getLogo()));
         values.put(NAME, campaign.getName());
         values.put(CREDITS, campaign.getUserGain());
+        values.put(TYPE, campaign.getType().toString());
         return values;
     }
     private ContentValues toContentValue(ShoppingItem item) throws NullPointerException{
@@ -162,8 +164,10 @@ public class DBManager{
             String url = cursor.getString(cursor.getColumnIndex(DBManager.URL));
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
             float userGain = cursor.getFloat(cursor.getColumnIndex(DBManager.CREDITS));
+            String type = cursor.getString(cursor.getColumnIndex(DBManager.TYPE));
 
-            CompanyCampaign newCampaign = new CompanyCampaign(id, url, logo, name, userGain);	//creo l' account
+            CompanyCampaign newCampaign = new CompanyCampaign(
+                    id, url, logo, name, userGain, CompanyCampaign.CampaignType.valueOf(type));	//creo l' account
 
             list.add(newCampaign);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
@@ -207,7 +211,8 @@ public class DBManager{
                 + URL + " text not null, "
                 + NAME + " text not null, "
                 + LOGO + " blob not null,"
-                + CREDITS + " real not null);";
+                + CREDITS + " real not null,"
+                + TYPE + " text not null);";
 
         private static final String SQL_CREATE_TABLE_SHOPPING_ITEMS = "create table "
                 + SHOPPING_ITEMS_TABLE + " (" //
