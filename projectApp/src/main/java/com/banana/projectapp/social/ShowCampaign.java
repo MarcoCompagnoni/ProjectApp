@@ -1,12 +1,6 @@
 package com.banana.projectapp.social;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
@@ -14,7 +8,6 @@ import com.banana.projectapp.campagne.CompanyCampaign;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.CampaignInvalid;
-import com.banana.projectapp.exception.CouponTypeInvalid;
 import com.banana.projectapp.exception.LocationInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.PostInvalid;
@@ -22,22 +15,24 @@ import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.SocialTypeInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
 import com.banana.projectapp.shop.ShowCode;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.Signature;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,14 +42,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+public class ShowCampaign extends ActionBarActivity
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        OnMapReadyCallback{
 
-public class ShowCampaign extends ActionBarActivity {
-
+    GoogleApiClient mGoogleApiClient;
+    Location mLastLocation;
+    private MapView mapView;
     ClientStub client;
-    Location myLocation;
-    TextView geoView;
+    //TextView geoView;
     Button confirm;
     ParticipateCampaignTask participateCampaignTask;
 
@@ -62,6 +58,9 @@ public class ShowCampaign extends ActionBarActivity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    this.setContentView(R.layout.show_campaign);
+
+        mapView = (MapView) findViewById(R.id.map);
+        mapView.onCreate(savedInstanceState);
 
         client = new ClientStub();
 
@@ -74,7 +73,7 @@ public class ShowCampaign extends ActionBarActivity {
         TextView credits = (TextView) findViewById(R.id.crediti_campagna);
         credits.setText(DataHolder.getCampaign().getUserGain()+" CR");
         credits.invalidate();
-        geoView = (TextView) findViewById(R.id.geoView);
+        //geoView = (TextView) findViewById(R.id.geoView);
         confirm = (Button) findViewById(R.id.geoButton);
         confirm.setOnClickListener(new View.OnClickListener(){
 
@@ -87,18 +86,22 @@ public class ShowCampaign extends ActionBarActivity {
         });
 
         if (DataHolder.getCampaign().getType() != CompanyCampaign.CampaignType.PHOTO) {
-            getGeoLocation();
-            geoView.setVisibility(View.VISIBLE);
+
+            buildGoogleApiClient();
+            mGoogleApiClient.connect();
+            mapView.setVisibility(View.VISIBLE);
         } else {
             confirm.setEnabled(true);
         }
-	    getApplicationHASH();
-	    
+
+
+
 	}
 	
 	@Override
 	public void onResume() {
 	    super.onResume();
+        mapView.onResume();
 	}
 	
 	@Override
@@ -108,19 +111,38 @@ public class ShowCampaign extends ActionBarActivity {
 
 	@Override
 	public void onPause() {
-	    super.onPause();
+        mapView.onPause();
+        super.onPause();
 	}
 
 	@Override
 	public void onDestroy() {
         if (participateCampaignTask != null)
             participateCampaignTask.cancel(true);
-	    super.onDestroy();
+	    mapView.onDestroy();
+        super.onDestroy();
 	}
+
+    @Override
+    public void onLowMemory(){
+        super.onLowMemory();
+        mapView.onLowMemory();
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Log.e("aaa","build google api");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        Log.e("aaa","google api client creato");
+    }
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 	    super.onSaveInstanceState(outState);
+        mapView.onSaveInstanceState(outState);
 	}
 
 	@Override
@@ -136,79 +158,54 @@ public class ShowCampaign extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-	private String getApplicationHASH(){
-	    PackageInfo info;
-	    try {
-            info = getPackageManager().getPackageInfo("com.banana.projectapp", PackageManager.GET_SIGNATURES);
-            Signature signature = info.signatures[0];
-            MessageDigest md;
-            md = MessageDigest.getInstance("SHA");
-            md.update(signature.toByteArray());
-            String something = new String(Base64.encode(md.digest(), 0));
-            Log.e("hash key", something);
-            return something;
-	    } catch (NameNotFoundException e1) {
-	        Log.e("name not found", e1.toString());
-	    } catch (NoSuchAlgorithmException e) {
-	        Log.e("no such an algorithm", e.toString());
-	    } catch (Exception e) {
-	        Log.e("exception", e.toString());
-	    }
-		return null;
-	}
+    @Override
+    public void onConnected(Bundle bundle) {
 
-    public void getGeoLocation(){
-        final LocationManager locationManager = (LocationManager)
-                getSystemService(Context.LOCATION_SERVICE);
+        Log.e("aaa","on connected");
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        Log.e("aaa","chiamo get map asinc");
+        mapView.getMapAsync(this);
 
-        Location recentLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if(recentLocation != null && recentLocation.getTime() > Calendar.getInstance().getTimeInMillis() - 2 * 60 * 1000) {
-            myLocation = recentLocation;
-            DataHolder.setLocation(myLocation);
-            geoView.setText(myLocation.getLatitude()+","+myLocation.getLongitude());
-            geoView.invalidate();
+
+        if (mLastLocation != null){
+            //geoView.setText(String.valueOf(mLastLocation.getLatitude()) + String.valueOf(mLastLocation.getLongitude()));
+            //geoView.invalidate();
             confirm.setEnabled(true);
-        } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
-
-                @Override
-                public void onLocationChanged(Location location) {
-                    myLocation = location;
-                    locationManager.removeUpdates(this);
-                    DataHolder.setLocation(myLocation);
-                    geoView.setText(myLocation.getLatitude()+","+myLocation.getLongitude());
-                    geoView.invalidate();
-                    confirm.setEnabled(true);
-
-                }
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {}
-                @Override
-                public void onProviderEnabled(String provider) {}
-                @Override
-                public void onProviderDisabled(String provider) {}
-            });
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, new LocationListener() {
-
-                @Override
-                public void onLocationChanged(Location location) {
-                    myLocation = location;
-                    locationManager.removeUpdates(this);
-                    DataHolder.setLocation(myLocation);
-                    geoView.setText(myLocation.getLatitude()+","+myLocation.getLongitude());
-                    geoView.invalidate();
-                    confirm.setEnabled(true);
-
-                }
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {}
-                @Override
-                public void onProviderEnabled(String provider) {}
-                @Override
-                public void onProviderDisabled(String provider) {}
-            });
         }
     }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+        Log.e("aaa","on map ready");
+        MapsInitializer.initialize(this);
+        googleMap.setMyLocationEnabled(true);
+        double latitude = mLastLocation.getLatitude();
+        double longitude = mLastLocation.getLongitude();
+        LatLng mylocation = new LatLng(latitude, longitude);
+        LatLng local = new LatLng(45.768, 8.807);
+        googleMap.addMarker(new MarkerOptions().position(
+                local).title("posizione del locale"));
+        float zoom = 15;
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                new CameraPosition(mylocation,zoom,0,0)));
+        googleMap.addCircle(new CircleOptions()
+                .center(local)
+                .radius(10)
+                .visible(true)
+                .strokeColor(R.color.material_blue_grey_800));
+    }
+
     private class ParticipateCampaignTask extends AsyncTask<Void, Void, Boolean> {
 
         String code;

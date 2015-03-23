@@ -5,3 +5,4 @@ C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermedia
 C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-2f8cf07a94fd244aa7af0b3503a070a1dc121c74.jar
 C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-08301f1a7a0afd31cdb9191a1af01e27d1ebdcc0.jar
 C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-5fe9c51ffe1fea9e5bb80fb8ab10fc5ca227af4b.jar
+C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-1a87e1bdc141d6c20de9658a7e7b26b98d7f25b0.jar

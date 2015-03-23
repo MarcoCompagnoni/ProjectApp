@@ -1,11 +1,15 @@
 package com.banana.projectapp.main;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +42,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class LoginFBActivity extends ActionBarActivity{
@@ -57,7 +63,7 @@ public class LoginFBActivity extends ActionBarActivity{
         client = new ClientStub();
 
         setupLogin();
-
+        getApplicationHASH();
         uiHelper.onCreate(savedInstanceState);
 
     }
@@ -243,5 +249,26 @@ public class LoginFBActivity extends ActionBarActivity{
             loginTask = null;
             super.onCancelled();
         }
+    }
+
+    private String getApplicationHASH(){
+        PackageInfo info;
+        try {
+            info = getPackageManager().getPackageInfo("com.banana.projectapp", PackageManager.GET_SIGNATURES);
+            Signature signature = info.signatures[0];
+            MessageDigest md;
+            md = MessageDigest.getInstance("SHA");
+            md.update(signature.toByteArray());
+            String something = new String(Base64.encode(md.digest(), 0));
+            Log.e("hash key", something);
+            return something;
+        } catch (PackageManager.NameNotFoundException e1) {
+            Log.e("name not found", e1.toString());
+        } catch (NoSuchAlgorithmException e) {
+            Log.e("no such an algorithm", e.toString());
+        } catch (Exception e) {
+            Log.e("exception", e.toString());
+        }
+        return null;
     }
 }

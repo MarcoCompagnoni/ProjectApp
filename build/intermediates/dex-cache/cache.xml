@@ -23,6 +23,13 @@
         <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-2f8cf07a94fd244aa7af0b3503a070a1dc121c74.jar" />
     </item>
     <item
+        jar="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\exploded-aar\com.google.android.gms\play-services\6.5.87\classes.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="dd9247ea0fabe8ee479638c4b4a23e93752be256">
+        <dex dex="C:\Users\compagnoni\AndroidStudioProjects\ProjectApp\projectApp\build\intermediates\pre-dexed\debug\classes-1a87e1bdc141d6c20de9658a7e7b26b98d7f25b0.jar" />
+    </item>
+    <item
         jar="C:\Users\compagnoni\Android SDK\extras\android\m2repository\com\android\support\support-annotations\21.0.3\support-annotations-21.0.3.jar"
         jumboMode="false"
         revision="21.1.2"
