@@ -71,10 +71,6 @@
             android:value="AIzaSyAF07QOk9N46K---iiVh3o1iCrCD4ZhIiU"/>
 
         <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main" >
-        </activity>
-        <activity
             android:name=".shop.ShowCode"
             android:label="@string/title_activity_show_code"
             android:parentActivityName=".main.MainFragmentActivity" >

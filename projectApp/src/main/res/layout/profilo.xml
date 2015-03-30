@@ -11,7 +11,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:text="@string/user"
             android:textColor="#000000"
             android:textSize="24sp"
             android:layout_marginTop="20dp"
@@ -24,7 +23,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:text="@string/credits"
             android:textColor="#000000"
             android:textSize="20sp"
             android:layout_marginTop="49dp"
@@ -38,7 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Cancella il tuo account"
+        android:text="@string/deleteAccount"
         android:layout_marginTop="64dp"
         android:layout_below="@+id/numero_crediti"
         android:layout_centerHorizontal="true" />
@@ -48,6 +46,8 @@
         android:layout_height="150dp"
         android:id="@+id/imageView"
         android:layout_above="@+id/nome_utente"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        tools:ignore="contentDescription"
+        />
 
 </RelativeLayout>

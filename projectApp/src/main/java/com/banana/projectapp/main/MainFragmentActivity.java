@@ -289,9 +289,12 @@ public class MainFragmentActivity extends ActionBarActivity {
         protected void onPostExecute(final Boolean success) {
             userLogoutTask = null;
             if (success){
-                DataHolder.setAuthToken(null);
-                DataHolder.getSession().closeAndClearTokenInformation();
-                DataHolder.setSession(null);
+
+                if (DataHolder.testing) {
+                    DataHolder.setAuthToken(null);
+                    DataHolder.getSession().closeAndClearTokenInformation();
+                    DataHolder.setSession(null);
+                }
                 Intent intent = new Intent(MainFragmentActivity.this,LoginFBActivity.class);
                 startActivity(intent);
             }

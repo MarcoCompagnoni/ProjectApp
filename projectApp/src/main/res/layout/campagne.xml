@@ -17,7 +17,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
-            android:text="@string/user"
             android:textColor="#FFFFFF"
             android:textSize="18sp" />
 
@@ -26,7 +25,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="end"
-            android:text="@string/credits"
             android:textColor="#FFFFFF"
             android:textSize="18sp" />
     </RelativeLayout>

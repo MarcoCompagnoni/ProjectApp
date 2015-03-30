@@ -2,9 +2,6 @@ package com.banana.projectapp.profile;
 
 import android.graphics.Bitmap;
 
-/**
- * Created by Compagnoni on 11/03/2015.
- */
 public class MyProfile {
     private String firstName;
     private String lastName;

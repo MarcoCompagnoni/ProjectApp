@@ -5,36 +5,46 @@
             "id":1,
             "url":"https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTLSZwiSx1wV28ZyPF3JN_oGOkZBfdyIs-ixXeYXHQouglWDRXKDw",
             "customer":"coca cola",
-            "userGain":100,
-            "type":"PHOTO"
+            "userGain":7,
+            "type":"PHOTO",
+            "latitude":0,
+            "longitude":0
         },
         {
             "id":2,
-            "url":"https://pullquotesandexcerpts.files.wordpress.com/2013/11/silver-apple-logo.png?w=360",
-            "customer":"apple",
-            "userGain":50,
-            "type":"GEO"
+            "url":"http://www.tigellabella.it/wp-content/uploads/2014/05/LOGHI-ISTITUZIONALI.png",
+            "customer":"tigella bella",
+            "userGain":3,
+            "type":"GEO",
+            "latitude":45.820682,
+            "longitude":8.827189
         },
         {
             "id":3,
-            "url":"http://blog.logomyway.com/wp-content/uploads/2013/05/bmw-logo.jpg",
-            "customer":"bmw",
-            "userGain":70,
-            "type":"GEOPHOTO"
+            "url":"https://consumeraffairs.global.ssl.fastly.net/files/news/mcdonalds_logo.jpg",
+            "customer":"mc donald's",
+            "userGain":5,
+            "type":"GEOPHOTO",
+            "latitude":45.8225184,
+            "longitude":8.8197654
         },
         {
             "id":4,
-            "url":"http://upload.wikimedia.org/wikipedia/en/archive/a/a9/20140331161125!Logitech_logo.png",
-            "customer":"logitech",
-            "userGain":200,
-            "type":"GEO"
+            "url":"http://www.maestrigelatieri.info/foto/Logo_grande4.jpg",
+            "customer":"cioccolati italiani",
+            "userGain":2,
+            "type":"GEO",
+            "latitude":45.8196529,
+            "longitude":8.8284497
         },
         {
             "id":5,
-            "url":"http://www.elmec.com/ElmecCom2014v3/images/tplpage/logo_elmec_IT.png",
-            "customer":"elmec",
-            "userGain":20,
-            "type":"PHOTO"
+            "url":"http://e08595.medialib.glogster.com/media/7c/7cd9f0a3ea8c0b262c5c4b6d7db35d71ea00b16f9691e0bde548e35f826dedb6/emporio-armani-logo-jpg.jpg",
+            "customer":"armani",
+            "userGain":7,
+            "type":"PHOTO",
+            "latitude":0,
+            "longitude":0
         }
     ]
 }

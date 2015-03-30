@@ -5,25 +5,25 @@
             "id":1,
             "url":"http://news.dice.com/wp-content/uploads/2013/10/amazon-1.png",
             "shop":"amazon",
-            "credits":70
+            "credits":5
         },
         {
             "id":2,
             "url":"http://www.logodesignlove.com/images/evolution/ebay-logo-02.jpg",
             "shop":"ebay",
-            "credits":30
+            "credits":5
         },
         {
             "id":3,
             "url":"http://fontmeme.com/images/Paypal-Logo.jpg",
             "shop":"paypal",
-            "credits":50
+            "credits":5
         },
         {
             "id":4,
             "url":"http://screenwerk.com/wpn/media/Screen-Shot-2013-02-27-at-1.37.14-PM.png",
             "shop":"groupon",
-            "credits":120
+            "credits":5
         }
     ]
 }

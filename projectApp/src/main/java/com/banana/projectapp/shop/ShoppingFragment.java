@@ -105,7 +105,7 @@ public class ShoppingFragment extends Fragment{
 		nome.setText(DataHolder.getUserName());
 		nome.invalidate();
         creditsText = (TextView) rootView.findViewById(R.id.numero_crediti);
-        creditsText.setText(DataHolder.getCredits()+" CR");
+        creditsText.setText(DataHolder.getCredits()+" €");
         creditsText.invalidate();
 
 //        final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);
@@ -189,7 +189,9 @@ public class ShoppingFragment extends Fragment{
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),
+                                getString(R.string.no_connection)
+                                ,Toast.LENGTH_SHORT).show();
                     }
                 });
                 return false;
@@ -281,7 +283,9 @@ public class ShoppingFragment extends Fragment{
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),
+                                getString(R.string.no_connection)
+                                ,Toast.LENGTH_SHORT).show();
                     }
                 });
                 return false;
@@ -295,16 +299,17 @@ public class ShoppingFragment extends Fragment{
             if (success){
                 DataHolder.setCode(code);
                 DataHolder.setCredits(DataHolder.getCredits()-credits);
-                creditsText.setText(DataHolder.getCredits()+" CR");
+                creditsText.setText(DataHolder.getCredits()+" €");
                 creditsText.invalidate();
-                Toast.makeText(getActivity(),
-                        "id = "+id+" coupon = "+shop+" credits = "+credits+" code = "+code
-                        ,Toast.LENGTH_LONG).show();
+//                Toast.makeText(getActivity(),
+//                        "id = "+id+" coupon = "+shop+" credits = "+credits+" code = "+code
+//                        ,Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(getActivity(), ShowCode.class);
+                intent.putExtra("calling_activity","shopping");
                 startActivity(intent);
             } else {
                 Toast.makeText(getActivity(),
-                        "You do not have enough credits"
+                        getString(R.string.no_enough_credits)
                         ,Toast.LENGTH_LONG).show();
             }
         }
@@ -355,8 +360,9 @@ public class ShoppingFragment extends Fragment{
                     public void onItemClick(AdapterView<?> parent, View view,
                                             int position, long id) {
                         requestedCoupon = coupons.get(position);
-                        builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
-                                .setNegativeButton("No", dialogClickListener).show();
+                        builder.setMessage(getString(R.string.are_you_sure))
+                                .setPositiveButton(getString(R.string.yes), dialogClickListener)
+                                .setNegativeButton(getString(R.string.no), dialogClickListener).show();
                     }
                 });
             }

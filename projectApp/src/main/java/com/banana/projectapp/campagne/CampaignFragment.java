@@ -62,7 +62,7 @@ public class CampaignFragment extends Fragment {
         campaigns.addAll(db.getCampaigns());
         db.close();
         adapter.notifyDataSetChanged();
-        credits.setText(DataHolder.getCredits()+" CR");
+        credits.setText(DataHolder.getCredits()+" €");
         credits.invalidate();
     }
 
@@ -194,7 +194,9 @@ public class CampaignFragment extends Fragment {
                             obj.getString("url"),
                             obj.getString("customer"),
                             (float)obj.getDouble("userGain"),
-                            CompanyCampaign.CampaignType.valueOf(obj.getString("type")));
+                            CompanyCampaign.CampaignType.valueOf(obj.getString("type")),
+                            obj.getDouble("latitude"),
+                            obj.getDouble("longitude"));
                     Log.e("","url="+c.getUrl());
                     campaignList.add(c);
                 }
@@ -206,7 +208,9 @@ public class CampaignFragment extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),
+                                getString(R.string.no_connection)
+                                ,Toast.LENGTH_SHORT).show();
                     }
                 });
                 return false;

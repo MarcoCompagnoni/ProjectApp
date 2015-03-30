@@ -30,7 +30,6 @@ import android.widget.Toast;
 
 public class ProfileFragment extends Fragment{
 
-    SocialAdapter adapter;
 	ListView list;
     private ClientStub client;
     TextView nome;
@@ -210,33 +209,34 @@ public class ProfileFragment extends Fragment{
 //            }
 //        });
 
-        final Button removeAccount = (Button) rootView.findViewById(R.id.removeAccount);
-        final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which){
-                    case DialogInterface.BUTTON_POSITIVE:
-                        if (deleteAccountTask != null){
-                            return;
-                        }
-                        deleteAccountTask = new DeleteAccountTask();
-                        deleteAccountTask.execute((Void) null);
-                        break;
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        break;
-                }
-            }
-        };
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        removeAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
-
-            }
-        });
+//        final Button removeAccount = (Button) rootView.findViewById(R.id.removeAccount);
+//        final DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                switch (which){
+//                    case DialogInterface.BUTTON_POSITIVE:
+//                        if (deleteAccountTask != null){
+//                            return;
+//                        }
+//                        deleteAccountTask = new DeleteAccountTask();
+//                        deleteAccountTask.execute((Void) null);
+//                        break;
+//                    case DialogInterface.BUTTON_NEGATIVE:
+//                        break;
+//                }
+//            }
+//        };
+//        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+//        removeAccount.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                builder.setMessage(getString(R.string.are_you_sure))
+//                        .setPositiveButton(getString(R.string.yes), dialogClickListener)
+//                        .setNegativeButton(getString(R.string.no), dialogClickListener).show();
+//
+//            }
+//        });
 
 //		list = (ListView) rootView.findViewById(R.id.list_view);
 //
@@ -393,7 +393,9 @@ public class ProfileFragment extends Fragment{
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getActivity(),"No connection",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),
+                                getString(R.string.no_connection)
+                                ,Toast.LENGTH_SHORT).show();
                     }
                 });
                 return false;

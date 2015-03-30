@@ -9,25 +9,23 @@ public class CompanyCampaign {
 	private String name;
     private float userGain;
     private CampaignType type;
+    private double latitude;
+    private double longitude;
 
     public enum CampaignType {GEO,PHOTO,GEOPHOTO};
 
-    public CompanyCampaign(long id, String url, String name, float userGain, CampaignType type){
+    public CompanyCampaign(long id, String url, String name, float userGain, CampaignType type,
+                           double latitude, double longitude){
         this.setId(id);
         this.setUrl(url);
         this.setName(name);
         this.setUserGain(userGain);
         this.setType(type);
+        this.setLatitude(latitude);
+        this.setLongitude(longitude);
+
     }
 
-	public CompanyCampaign(long id, String url, Bitmap logo, String name, float userGain, CampaignType type){
-        this.setId(id);
-        this.setUrl(url);
-		this.setLogo(logo);
-		this.setName(name);
-        this.setUserGain(userGain);
-        this.setType(type);
-	}
 	public Bitmap getLogo() {
 		return logo;
 	}
@@ -68,4 +66,20 @@ public class CompanyCampaign {
     public void setType(CampaignType type) {
         this.type = type;
     }
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
 }

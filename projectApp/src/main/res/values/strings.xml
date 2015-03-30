@@ -7,16 +7,19 @@
     <string name="title_section3">Profilo</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="action_example">Example action</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Opzioni</string>
     <string name="app_id">1533043126936786</string>
-    <string name="title_activity_main">MainActivity</string>
     <string name="title_section4">Log out</string>
-    <string name="user">Marco Compagnoni</string>
-    <string name="credits">100 CR</string>
-    <string name="title_activity_show_code">ShowCode</string>
-
-    <string name="hello_world">Hello world!</string>
-    <string name="title_activity_participate_campaign">ParticipateCampaign</string>
+    <string name="title_activity_show_code">Codice Premio</string>
+    <string name="no_connection">Nessuna Connessione</string>
+    <string name="title_activity_participate_campaign">Participa a una campagna</string>
+    <string name="no_enough_credits">Non hai abbastanza crediti</string>
+    <string name="are_you_sure">Sei sicuro?</string>
+    <string name="yes">Si</string>
+    <string name="no">No</string>
+    <string name="confirm">Conferma</string>
+    <string name="deleteAccount">Cancella il tuo profilo Friendz</string>
+    <string name="geo_code">Ben fatto :)\nMostra questo codice alla cassa e ottieni la tua ricompensa!</string>
+    <string name="shop_code">Complimenti per l\'acquisto!\nUtilizza questo codice per ottenere il tuo buono:</string>
 
 </resources>

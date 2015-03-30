@@ -55,7 +55,7 @@ public class ShoppingAdapter extends BaseAdapter {
 		ShoppingItem item = items.get(position);
 		holder.avatar.setImageBitmap(item.getLogo());
 		holder.name.setText(item.getName());
-		holder.credits.setText(item.getCredits()+" CR");
+		holder.credits.setText(item.getCredits()+" €");
 		
 		return view;
 	}

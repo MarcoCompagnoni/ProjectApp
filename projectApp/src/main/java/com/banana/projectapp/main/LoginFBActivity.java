@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -24,9 +25,6 @@ import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.UserInvalid;
 import com.banana.projectapp.profile.MyProfile;
-import com.facebook.HttpMethod;
-import com.facebook.Request;
-import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionLoginBehavior;
 import com.facebook.SessionState;
@@ -41,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -57,25 +56,33 @@ public class LoginFBActivity extends ActionBarActivity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.choose_social);
-        uiHelper = new UiLifecycleHelper(this, callback);
+        if (!DataHolder.testing){
 
-        client = new ClientStub();
+            loginTask = new LoginTask();
+            loginTask.execute();
+        } else {
+            this.setContentView(R.layout.login_fb);
+            uiHelper = new UiLifecycleHelper(this, callback);
 
-        setupLogin();
-        getApplicationHASH();
-        uiHelper.onCreate(savedInstanceState);
+            client = new ClientStub();
+
+            setupLogin();
+            getApplicationHASH();
+            uiHelper.onCreate(savedInstanceState);
+        }
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        session = Session.getActiveSession();
-        if (session != null &&
-                (session.isOpened() || session.isClosed()) ) {
-            onSessionStateChange(session, session.getState());
-        }
+
+        if (DataHolder.testing) {
+            session = Session.getActiveSession();
+            if (session != null &&
+                    (session.isOpened() || session.isClosed())) {
+                onSessionStateChange(session, session.getState());
+            }
 //        new Request(
 //                session,
 //                "/me/permissions",
@@ -87,13 +94,16 @@ public class LoginFBActivity extends ActionBarActivity{
 //                    }
 //                }
 //        ).executeAsync();
-        uiHelper.onResume();
+            uiHelper.onResume();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        uiHelper.onPause();
+        if (DataHolder.testing) {
+            uiHelper.onPause();
+        }
     }
 
     @Override
@@ -101,13 +111,17 @@ public class LoginFBActivity extends ActionBarActivity{
         if (loginTask!=null)
             loginTask.cancel(true);
         super.onDestroy();
-        uiHelper.onDestroy();
+        if (DataHolder.testing) {
+            uiHelper.onDestroy();
+        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        uiHelper.onSaveInstanceState(outState);
+        if (DataHolder.testing) {
+            uiHelper.onSaveInstanceState(outState);
+        }
     }
 
     private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -139,7 +153,9 @@ public class LoginFBActivity extends ActionBarActivity{
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        uiHelper.onActivityResult(requestCode,resultCode,data);
+        if (DataHolder.testing) {
+            uiHelper.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void onSessionStateChange(Session session, SessionState state) {
@@ -171,7 +187,7 @@ public class LoginFBActivity extends ActionBarActivity{
             Log.i("","parte login task");
             String userInfo;
             try {
-                if (DataHolder.testing) {
+                if (DataHolder.testing){
                     String token = client.login(session.getAccessToken());
                     DataHolder.setAuthToken(token);
                     float credits = client.getCreditAmount(token);
@@ -182,8 +198,12 @@ public class LoginFBActivity extends ActionBarActivity{
                     BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder total = new StringBuilder();
                     String line;
-                    while ((line = r.readLine()) != null) {
-                        total.append(line);
+                    try {
+                        while ((line = r.readLine()) != null) {
+                            total.append(line);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     userInfo = total.toString();
                 }

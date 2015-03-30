@@ -22,7 +22,7 @@ import com.banana.projectapp.shop.ShoppingItem;
 public class DBManager{
 
     public static final String DATABASE_NAME = "FRIENZ.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     public static final String CAMPAIGNS_TABLE = "CAMPAIGNS";
     public static final String SOCIALS_TABLE = "SOCIALS";
@@ -34,6 +34,8 @@ public class DBManager{
     public static final String NAME = "name";
     public static final String CREDITS = "credits";
     public static final String TYPE = "type";
+    public static final String LATITUDE = "latitude";
+    public static final String LONGITUDE = "longitude";
 
     private SQLiteDatabase db;
     private DBHelper dbHelper;
@@ -87,6 +89,8 @@ public class DBManager{
         values.put(NAME, campaign.getName());
         values.put(CREDITS, campaign.getUserGain());
         values.put(TYPE, campaign.getType().toString());
+        values.put(LATITUDE, campaign.getLatitude());
+        values.put(LONGITUDE, campaign.getLongitude());
         return values;
     }
     private ContentValues toContentValue(ShoppingItem item) throws NullPointerException{
@@ -165,9 +169,13 @@ public class DBManager{
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
             float userGain = cursor.getFloat(cursor.getColumnIndex(DBManager.CREDITS));
             String type = cursor.getString(cursor.getColumnIndex(DBManager.TYPE));
+            double latitude = cursor.getDouble(cursor.getColumnIndex(DBManager.LATITUDE));
+            double longitude = cursor.getDouble(cursor.getColumnIndex(DBManager.LONGITUDE));
 
             CompanyCampaign newCampaign = new CompanyCampaign(
-                    id, url, logo, name, userGain, CompanyCampaign.CampaignType.valueOf(type));	//creo l' account
+                    id, url, name, userGain, CompanyCampaign.CampaignType.valueOf(type),
+                    latitude, longitude);
+            newCampaign.setLogo(logo);
 
             list.add(newCampaign);		//lo aggiungo alla lista
             cursor.moveToNext();		//passo alla prossima riga
@@ -212,7 +220,9 @@ public class DBManager{
                 + NAME + " text not null, "
                 + LOGO + " blob not null,"
                 + CREDITS + " real not null,"
-                + TYPE + " text not null);";
+                + TYPE + " text not null,"
+                + LATITUDE + " real not null,"
+                + LONGITUDE + " real not null);";
 
         private static final String SQL_CREATE_TABLE_SHOPPING_ITEMS = "create table "
                 + SHOPPING_ITEMS_TABLE + " (" //

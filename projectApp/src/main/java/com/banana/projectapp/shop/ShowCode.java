@@ -15,6 +15,17 @@ public class ShowCode extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.show_code);
+        TextView text = (TextView) findViewById(R.id.code_text);
+
+        Bundle b = getIntent().getExtras();
+        String calling_activity = b.getString("calling_activity");
+
+        if (calling_activity.equals("geo"))
+            text.setText(getString(R.string.geo_code));
+        else if (calling_activity.equals("shopping"))
+            text.setText(getString(R.string.shop_code));
+        text.invalidate();
+
         TextView codeView = (TextView)findViewById(R.id.code);
         codeView.setText(DataHolder.getCode());
         codeView.invalidate();

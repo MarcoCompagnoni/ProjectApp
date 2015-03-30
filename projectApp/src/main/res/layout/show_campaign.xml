@@ -23,11 +23,13 @@
             android:layout_marginStart="30dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentStart="true"
+            tools:ignore="contentDescription"/>
 
         <RelativeLayout
             android:id="@+id/info_campagna"
             android:layout_toRightOf="@id/logo_campagna"
+            android:layout_toEndOf="@id/logo_campagna"
             android:layout_width="wrap_content"
             android:layout_height="150dp"
             android:layout_gravity="center"
@@ -43,7 +45,6 @@
                 android:id="@+id/crediti_campagna"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="100000 CR"
                 android:textColor="#000"
                 android:textSize="20sp"
                 android:textStyle="italic"
@@ -93,7 +94,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Conferma"
+        android:text="@string/confirm"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
 

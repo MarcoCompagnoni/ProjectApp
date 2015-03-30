@@ -71,7 +71,7 @@ public class ShowCampaign extends ActionBarActivity
         name.setText(DataHolder.getCampaign().getName());
         name.invalidate();
         TextView credits = (TextView) findViewById(R.id.crediti_campagna);
-        credits.setText(DataHolder.getCampaign().getUserGain()+" CR");
+        credits.setText(DataHolder.getCampaign().getUserGain()+" €");
         credits.invalidate();
         //geoView = (TextView) findViewById(R.id.geoView);
         confirm = (Button) findViewById(R.id.geoButton);
@@ -193,9 +193,11 @@ public class ShowCampaign extends ActionBarActivity
         double latitude = mLastLocation.getLatitude();
         double longitude = mLastLocation.getLongitude();
         LatLng mylocation = new LatLng(latitude, longitude);
-        LatLng local = new LatLng(45.768, 8.807);
+
+        LatLng local = new LatLng(DataHolder.getCampaign().getLatitude(),
+                DataHolder.getCampaign().getLongitude());
         googleMap.addMarker(new MarkerOptions().position(
-                local).title("posizione del locale"));
+                local).title(DataHolder.getCampaign().getName()));
         float zoom = 15;
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(
                 new CameraPosition(mylocation,zoom,0,0)));
@@ -249,7 +251,9 @@ public class ShowCampaign extends ActionBarActivity
                 ShowCampaign.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(ShowCampaign.this,"No connection",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ShowCampaign.this,
+                                getString(R.string.no_connection)
+                                ,Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -268,6 +272,7 @@ public class ShowCampaign extends ActionBarActivity
                 } else {
                     DataHolder.setCode(code);
                     Intent intent = new Intent(ShowCampaign.this, ShowCode.class);
+                    intent.putExtra("calling_activity","geo");
                     startActivity(intent);
                 }
             }
