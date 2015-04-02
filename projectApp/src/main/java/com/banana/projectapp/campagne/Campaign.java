@@ -2,7 +2,8 @@ package com.banana.projectapp.campagne;
 
 import android.graphics.Bitmap;
 
-public class CompanyCampaign {
+public class Campaign {
+
     private long id;
     private String url;
 	private Bitmap logo;
@@ -14,8 +15,8 @@ public class CompanyCampaign {
 
     public enum CampaignType {GEO,PHOTO,GEOPHOTO};
 
-    public CompanyCampaign(long id, String url, String name, float userGain, CampaignType type,
-                           double latitude, double longitude){
+    public Campaign(long id, String url, String name, float userGain, CampaignType type,
+                    double latitude, double longitude){
         this.setId(id);
         this.setUrl(url);
         this.setName(name);
@@ -42,42 +43,33 @@ public class CompanyCampaign {
         return id;
     }
     public void setId(long id) { this.id = id; }
-
     public String getUrl() {
         return url;
     }
-
     public void setUrl(String url) {
         this.url = url;
     }
-
     public float getUserGain() {
         return userGain;
     }
-
     public void setUserGain(float userGain) {
         this.userGain = userGain;
     }
-
     public CampaignType getType() {
         return type;
     }
-
     public void setType(CampaignType type) {
         this.type = type;
     }
     public double getLatitude() {
         return latitude;
     }
-
     public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
-
     public double getLongitude() {
         return longitude;
     }
-
     public void setLongitude(double longitude) {
         this.longitude = longitude;
     }

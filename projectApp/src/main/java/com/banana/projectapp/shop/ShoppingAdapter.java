@@ -41,13 +41,16 @@ public class ShoppingAdapter extends BaseAdapter {
 		View view;
 		ViewHolder holder;
 		if(convertView == null) {
+
 			view = mInflater.inflate(R.layout.row_item_shopping, parent, false);
 			holder = new ViewHolder();
 			holder.avatar = (ImageView)view.findViewById(R.id.avatar);
 			holder.name = (TextView)view.findViewById(R.id.name);
 			holder.credits = (TextView)view.findViewById(R.id.credits);
 			view.setTag(holder);
+
 		} else {
+
 			view = convertView;
 			holder = (ViewHolder)view.getTag();
 		}

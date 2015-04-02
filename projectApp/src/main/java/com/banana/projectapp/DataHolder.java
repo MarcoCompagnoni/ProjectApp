@@ -1,19 +1,32 @@
 package com.banana.projectapp;
 
 import android.location.Location;
-import com.banana.projectapp.campagne.CompanyCampaign;
+import com.banana.projectapp.campagne.Campaign;
 import com.banana.projectapp.profile.MyProfile;
 import com.facebook.Session;
 
 public class DataHolder {
 
+    //abilita la connessione al server, se è falso il testing è tutto in locale
+    public static boolean testing_with_server = true;
+    private static String serverIP = "10.20.6.101";
+
+    //profilo dell'utente
     private static MyProfile myProfile;
+
+    //codice per il buono richiesto
     private static String code = null;
-    public static boolean testing = false;
+
+    //crediti dell'utente
     private static float credits = 0;
-    private static CompanyCampaign campaign;
+
+    //campagna selezionata
+    private static Campaign campaign;
+
+    //token di autenticazione al server Friendz
     private static String authToken = null;
-    private static Location location = null;
+
+    //sessione attiva di Facebook dell'utente
     private static Session session = null;
 
     public class SocialType{
@@ -31,10 +44,11 @@ public class DataHolder {
     public static String getUserName() {return myProfile.getFirstName()+" "+myProfile.getLastName();}
     public static float getCredits() {return credits;}
     public static void setCredits(float credits) {DataHolder.credits = credits;}
-    public static CompanyCampaign getCampaign() {return campaign;}
-    public static void setCampaign(CompanyCampaign campaign) {DataHolder.campaign = campaign;}
+    public static Campaign getCampaign() {return campaign;}
+    public static void setCampaign(Campaign campaign) {DataHolder.campaign = campaign;}
     public static String getCode() {return code;}
     public static void setCode(String code) {DataHolder.code = code;}
-    public static Location getLocation() {return location;}
-    public static void setLocation(Location location) {DataHolder.location = location;}
+    public static String getServerIP() {
+        return serverIP;
+    }
 }

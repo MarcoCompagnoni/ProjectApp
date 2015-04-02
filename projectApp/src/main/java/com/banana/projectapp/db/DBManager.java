@@ -15,17 +15,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
-import com.banana.projectapp.campagne.CompanyCampaign;
-import com.banana.projectapp.profile.Social;
+import com.banana.projectapp.campagne.Campaign;
 import com.banana.projectapp.shop.ShoppingItem;
 
 public class DBManager{
 
-    public static final String DATABASE_NAME = "FRIENZ.db";
+    public static final String DATABASE_NAME = "FRIENDZ.db";
     public static final int DATABASE_VERSION = 2;
 
     public static final String CAMPAIGNS_TABLE = "CAMPAIGNS";
-    public static final String SOCIALS_TABLE = "SOCIALS";
     public static final String SHOPPING_ITEMS_TABLE = "SHOPPING_ITEMS";
 
     public static final String ID = "_id";
@@ -60,13 +58,7 @@ public class DBManager{
         isConnected = false;
     }
 
-    public long insert(Social social) throws SQLiteException,NullPointerException{
-        if(social == null)
-            throw new NullPointerException("missing social");
-        ContentValues values = toContentValue(social);
-        return db.insert(SOCIALS_TABLE, null, values);
-    }
-    public long insert(CompanyCampaign campaign) throws SQLiteException,NullPointerException{
+    public long insert(Campaign campaign) throws SQLiteException,NullPointerException{
         if(campaign == null)
             throw new NullPointerException("missing campaign");
         ContentValues values = toContentValue(campaign);
@@ -79,9 +71,9 @@ public class DBManager{
         return db.insert(SHOPPING_ITEMS_TABLE, null, values);
     }
 
-    private ContentValues toContentValue(CompanyCampaign campaign) throws NullPointerException{
+    private ContentValues toContentValue(Campaign campaign) throws NullPointerException{
         if(campaign == null)
-            throw new NullPointerException("missing account");
+            throw new NullPointerException("missing campaign");
         ContentValues values = new ContentValues();
         values.put(ID, campaign.getId());
         values.put(URL, campaign.getUrl());
@@ -95,7 +87,7 @@ public class DBManager{
     }
     private ContentValues toContentValue(ShoppingItem item) throws NullPointerException{
         if(item == null)
-            throw new NullPointerException("missing account");
+            throw new NullPointerException("missing item");
         ContentValues values = new ContentValues();
         values.put(ID, item.getId());
         values.put(URL, item.getUrl());
@@ -104,25 +96,6 @@ public class DBManager{
         values.put(CREDITS, item.getCredits());
         return values;
     }
-    private ContentValues toContentValue(Social social) throws NullPointerException{
-        if(social == null)
-            throw new NullPointerException("missing account");
-        ContentValues values = new ContentValues();
-        values.put(ID, social.getId());
-        values.put(LOGO, getBytes(social.getLogo()));
-        values.put(NAME, social.getName());
-        return values;
-    }
-
-/*
-    public void update(Account account) throws SQLiteException,NullPointerException{
-        if(account == null)
-            throw new NullPointerException("missing account");
-        ContentValues updatedValues = toContentValue(account);	//inserisco i dati dell'account in contentValues
-        String where_clause = ACCOUNTS_KEY_ID + "=" + account.getId();	//cerco l'id dell'account
-        db.update(ACCOUNTS_TABLE, updatedValues, where_clause, null);	//lo sostituisco
-    }
-*/
 
     public int remove(long idx, String table) throws SQLiteException{
         return db.delete(table, ID + "=" + idx, null);
@@ -140,29 +113,12 @@ public class DBManager{
         return db.query(table, null, null, null, null, null, null);
     }
 
-    public List<Social> getSocials() throws SQLiteException{
-
-        Cursor cursor = this.getAllEntries(SOCIALS_TABLE);		//prendo tutte le righe
-        ArrayList<Social> list = new ArrayList<>();
+    public List<Campaign> getCampaigns() throws SQLiteException{
+        Cursor cursor = this.getAllEntries(CAMPAIGNS_TABLE);
+        ArrayList<Campaign> list = new ArrayList<>();
         cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {		//finche' non arrivo alla fine
-            String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
-            Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
-            long socialType = cursor.getLong(cursor.getColumnIndex(DBManager.ID));
 
-            Social newSocial = new Social(socialType,logo,name);	//creo l' account
-
-            list.add(newSocial);		//lo aggiungo alla lista
-            cursor.moveToNext();		//passo alla prossima riga
-        }
-        cursor.close();
-        return list;
-    }
-    public List<CompanyCampaign> getCampaigns() throws SQLiteException{
-        Cursor cursor = this.getAllEntries(CAMPAIGNS_TABLE);		//prendo tutte le righe
-        ArrayList<CompanyCampaign> list = new ArrayList<>();
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {		//finche' non arrivo alla fine
+        while (!cursor.isAfterLast()) {
             long id = cursor.getLong(cursor.getColumnIndex(DBManager.ID));
             String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
             String url = cursor.getString(cursor.getColumnIndex(DBManager.URL));
@@ -172,32 +128,33 @@ public class DBManager{
             double latitude = cursor.getDouble(cursor.getColumnIndex(DBManager.LATITUDE));
             double longitude = cursor.getDouble(cursor.getColumnIndex(DBManager.LONGITUDE));
 
-            CompanyCampaign newCampaign = new CompanyCampaign(
-                    id, url, name, userGain, CompanyCampaign.CampaignType.valueOf(type),
+            Campaign newCampaign = new Campaign(
+                    id, url, name, userGain, Campaign.CampaignType.valueOf(type),
                     latitude, longitude);
             newCampaign.setLogo(logo);
 
-            list.add(newCampaign);		//lo aggiungo alla lista
-            cursor.moveToNext();		//passo alla prossima riga
+            list.add(newCampaign);
+            cursor.moveToNext();
         }
         cursor.close();
         return list;
     }
     public List<ShoppingItem> getShoppingItems() throws SQLiteException{
-        Cursor cursor = this.getAllEntries(SHOPPING_ITEMS_TABLE);		//prendo tutte le righe
+        Cursor cursor = this.getAllEntries(SHOPPING_ITEMS_TABLE);
         ArrayList<ShoppingItem> list = new ArrayList<>();
         cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {		//finche' non arrivo alla fine
+        while (!cursor.isAfterLast()) {
+
             long id = cursor.getLong(cursor.getColumnIndex(DBManager.ID));
             String url = cursor.getString(cursor.getColumnIndex(DBManager.URL));
             String name = cursor.getString(cursor.getColumnIndex(DBManager.NAME));
             Bitmap logo = getImage(cursor.getBlob(cursor.getColumnIndex(DBManager.LOGO)));
             float credits = cursor.getFloat(cursor.getColumnIndex(DBManager.CREDITS));
 
-            ShoppingItem newItem = new ShoppingItem(id, url, logo, name, credits);	//creo l' account
+            ShoppingItem newItem = new ShoppingItem(id, url, logo, name, credits);
 
-            list.add(newItem);		//lo aggiungo alla lista
-            cursor.moveToNext();		//passo alla prossima riga
+            list.add(newItem);
+            cursor.moveToNext();
         }
         cursor.close();
         return list;
@@ -232,34 +189,22 @@ public class DBManager{
                 + LOGO + " blob not null, "
                 + CREDITS + " real not null);";
 
-        private static final String SQL_CREATE_TABLE_SOCIALS = "create table "
-                + SOCIALS_TABLE + " (" //
-                + ID + " integer primary key, "
-                + NAME + " text not null, "
-                + LOGO + " blob not null);";
-
         public void onCreate(SQLiteDatabase db) throws SQLiteException {
 
             db.execSQL(SQL_CREATE_TABLE_CAMPAIGNS);
-            db.execSQL(SQL_CREATE_TABLE_SOCIALS);
             db.execSQL(SQL_CREATE_TABLE_SHOPPING_ITEMS);
-            Log.i("","create tabelle");
 
         }
 
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) throws SQLiteException{
-            db.execSQL("drop table if exists "+SOCIALS_TABLE+";");
             db.execSQL("drop table if exists "+SHOPPING_ITEMS_TABLE+";");
             db.execSQL("drop table if exists "+CAMPAIGNS_TABLE+";");
-            Log.i("","droppate tabelle");
             onCreate(db);
         }
 
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) throws SQLiteException{
-            db.execSQL("drop table if exists "+SOCIALS_TABLE+";");
             db.execSQL("drop table if exists "+SHOPPING_ITEMS_TABLE+";");
             db.execSQL("drop table if exists "+CAMPAIGNS_TABLE+";");
-            Log.i("","droppate tabelle");
             onCreate(db);
         }
 

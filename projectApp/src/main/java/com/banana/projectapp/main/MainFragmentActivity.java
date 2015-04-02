@@ -18,7 +18,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,7 +25,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -37,10 +35,9 @@ import java.io.IOException;
 public class MainFragmentActivity extends ActionBarActivity {
 
     private ActionBarDrawerToggle mDrawerToggle;
-    Toolbar toolbar;
     private ClientStub client;
     private UserLogoutTask userLogoutTask;
-    private String[] mPlanetTitles;
+    private String[] mTitles;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     private DrawerLayout mDrawerLayout;
@@ -54,12 +51,12 @@ public class MainFragmentActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-        mPlanetTitles = new String[]{"Campagne","Shopping","Profilo","Logout"};
+        mTitles = new String[]{"Campagne","Shopping","Profilo","Logout"};
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerListView = (ListView) findViewById(R.id.left_drawer_list);
         drawerView = (RelativeLayout) findViewById(R.id.left_drawer);
         mDrawerListView.setAdapter(new ArrayAdapter<>(
-                this, android.R.layout.simple_list_item_1, mPlanetTitles
+                this, android.R.layout.simple_list_item_1, mTitles
         ));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         mDrawerListView.setOnItemClickListener(new ListView.OnItemClickListener() {
@@ -120,7 +117,7 @@ public class MainFragmentActivity extends ActionBarActivity {
                         .replace(R.id.container,
                                 ProfileFragment.newInstance()).commit();
                 mDrawerListView.setItemChecked(2, true);
-                setTitle(mPlanetTitles[2]);
+                setTitle(mTitles[2]);
                 mDrawerLayout.closeDrawer(drawerView);
             }
         });
@@ -188,7 +185,7 @@ public class MainFragmentActivity extends ActionBarActivity {
 
         // Highlight the selected item, update the title, and close the drawer
         mDrawerListView.setItemChecked(position, true);
-        setTitle(mPlanetTitles[position]);
+        setTitle(mTitles[position]);
         mDrawerLayout.closeDrawer(drawerView);
     }
 
@@ -266,8 +263,7 @@ public class MainFragmentActivity extends ActionBarActivity {
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (DataHolder.testing) {
-                    Log.e("","chiamo logout con token "+DataHolder.getAuthToken());
+                if (DataHolder.testing_with_server) {
                     client.logout(DataHolder.getAuthToken());
                 }
                 return true;
@@ -290,7 +286,7 @@ public class MainFragmentActivity extends ActionBarActivity {
             userLogoutTask = null;
             if (success){
 
-                if (DataHolder.testing) {
+                if (DataHolder.testing_with_server) {
                     DataHolder.setAuthToken(null);
                     DataHolder.getSession().closeAndClearTokenInformation();
                     DataHolder.setSession(null);

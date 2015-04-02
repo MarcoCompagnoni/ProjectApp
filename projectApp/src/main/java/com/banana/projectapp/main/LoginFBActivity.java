@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -56,7 +54,7 @@ public class LoginFBActivity extends ActionBarActivity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!DataHolder.testing){
+        if (!DataHolder.testing_with_server){
 
             loginTask = new LoginTask();
             loginTask.execute();
@@ -77,12 +75,13 @@ public class LoginFBActivity extends ActionBarActivity{
     public void onResume() {
         super.onResume();
 
-        if (DataHolder.testing) {
+        if (DataHolder.testing_with_server) {
             session = Session.getActiveSession();
             if (session != null &&
                     (session.isOpened() || session.isClosed())) {
                 onSessionStateChange(session, session.getState());
             }
+
 //        new Request(
 //                session,
 //                "/me/permissions",
@@ -94,6 +93,7 @@ public class LoginFBActivity extends ActionBarActivity{
 //                    }
 //                }
 //        ).executeAsync();
+
             uiHelper.onResume();
         }
     }
@@ -101,7 +101,7 @@ public class LoginFBActivity extends ActionBarActivity{
     @Override
     public void onPause() {
         super.onPause();
-        if (DataHolder.testing) {
+        if (DataHolder.testing_with_server) {
             uiHelper.onPause();
         }
     }
@@ -111,7 +111,7 @@ public class LoginFBActivity extends ActionBarActivity{
         if (loginTask!=null)
             loginTask.cancel(true);
         super.onDestroy();
-        if (DataHolder.testing) {
+        if (DataHolder.testing_with_server) {
             uiHelper.onDestroy();
         }
     }
@@ -119,7 +119,7 @@ public class LoginFBActivity extends ActionBarActivity{
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (DataHolder.testing) {
+        if (DataHolder.testing_with_server) {
             uiHelper.onSaveInstanceState(outState);
         }
     }
@@ -153,7 +153,7 @@ public class LoginFBActivity extends ActionBarActivity{
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (DataHolder.testing) {
+        if (DataHolder.testing_with_server) {
             uiHelper.onActivityResult(requestCode, resultCode, data);
         }
     }
@@ -162,10 +162,6 @@ public class LoginFBActivity extends ActionBarActivity{
         this.session = session;
         if (state.isOpened()) {
             Log.i("","session opened");
-//            Log.i("","START");
-//            for (String s: session.getPermissions()) {
-//                Log.i("", s);
-//            }
             authButton.setVisibility(View.INVISIBLE);
             if (loginTask != null){
                 return;
@@ -176,7 +172,7 @@ public class LoginFBActivity extends ActionBarActivity{
         } else if (state.isClosed()){
             Log.i("","session closed");
         } else {
-            Log.i("","boh "+state );
+            Log.i("",""+state );
         }
     }
 
@@ -184,10 +180,9 @@ public class LoginFBActivity extends ActionBarActivity{
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            Log.i("","parte login task");
             String userInfo;
             try {
-                if (DataHolder.testing){
+                if (DataHolder.testing_with_server){
                     String token = client.login(session.getAccessToken());
                     DataHolder.setAuthToken(token);
                     float credits = client.getCreditAmount(token);
@@ -208,7 +203,6 @@ public class LoginFBActivity extends ActionBarActivity{
                     userInfo = total.toString();
                 }
 
-                Log.i("","prese le user info");
                 try {
                     JSONObject o = new JSONObject(userInfo);
                     JSONObject data = o.getJSONObject("data");
@@ -217,22 +211,21 @@ public class LoginFBActivity extends ActionBarActivity{
                     String photoUrl = data.getString("photo");
                     HttpURLConnection connection;
 
-                    Log.e("","scarico immagine da "+photoUrl);
                     connection = (HttpURLConnection) new URL(photoUrl).openConnection();
                     connection.setDoInput(true);
                     connection.connect();
                     InputStream input;
                     input = connection.getInputStream();
                     Bitmap photo = BitmapFactory.decodeStream(input);
-                    DataHolder.setMyProfile(new MyProfile(firstName,lastName,photo));
-                    Log.e("","tutto bene creato profile con immagine "+photo);
+                    DataHolder.setMyProfile(new MyProfile(firstName, lastName, photo));
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
 
                 return true;
-            } catch (IOException | AuthTokenInvalid | SocialAccountTokenInvalid | UserInvalid e) {
+            } catch (IOException | AuthTokenInvalid | SocialAccountTokenInvalid | UserInvalid | JSONException e) {
                 e.printStackTrace();
 
             } catch (NoConnectionException e) {
@@ -242,8 +235,6 @@ public class LoginFBActivity extends ActionBarActivity{
                         Toast.makeText(LoginFBActivity.this,"No connection",Toast.LENGTH_SHORT).show();
                     }
                 });
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
             return false;
         }

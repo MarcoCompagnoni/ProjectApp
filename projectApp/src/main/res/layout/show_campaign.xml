@@ -4,7 +4,7 @@
     android:layout_height="fill_parent"
     android:background="#FFF"
     android:orientation="vertical"
-    tools:context="com.banana.projectapp.social.ShowCampaign">
+    tools:context="com.banana.projectapp.main.ShowCampaign">
 
     <RelativeLayout
         android:id="@+id/top_layout"

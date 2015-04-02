@@ -41,7 +41,7 @@
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name=".social.ShowCampaign"
+            android:name=".main.ShowCampaign"
             android:label="@string/app_name" >
             android:parentActivityName=".main.MainFragmentActivity" >
             <meta-data
@@ -71,7 +71,7 @@
             android:value="AIzaSyAF07QOk9N46K---iiVh3o1iCrCD4ZhIiU"/>
 
         <activity
-            android:name=".shop.ShowCode"
+            android:name=".main.ShowCode"
             android:label="@string/title_activity_show_code"
             android:parentActivityName=".main.MainFragmentActivity" >
             <meta-data
@@ -81,10 +81,10 @@
         <activity
             android:name=".social.ParticipateCampaign"
             android:label="@string/title_activity_participate_campaign"
-            android:parentActivityName=".social.ShowCampaign" >
+            android:parentActivityName=".main.ShowCampaign" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.banana.projectapp.social.ShowCampaign" />
+                android:value=".main.ShowCampaign" />
         </activity>
     </application>
 

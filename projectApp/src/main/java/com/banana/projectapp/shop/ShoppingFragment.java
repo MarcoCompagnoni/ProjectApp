@@ -17,7 +17,7 @@ import com.banana.projectapp.exception.CouponTypeInvalid;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.main.MainFragmentActivity;
-import com.banana.projectapp.social.ShowCampaign;
+import com.banana.projectapp.main.ShowCode;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -28,12 +28,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,18 +42,20 @@ import org.json.JSONObject;
 
 public class ShoppingFragment extends Fragment{
 
-	ShoppingAdapter adapter;
-	ListView list;
-    ClientStub client;
-    SynchronizeCouponsTask synchronizeCouponsTask;
-    RequestCouponTask requestCouponTask;
-    LoadShoppingTask loadShoppingTask;
-    TextView creditsText;
-    ShoppingItem requestedCoupon;
-    String coupon_json;
-    String requested_coupon_json;
+    private ClientStub client;
+
+    private ShoppingItem requestedCoupon;
+
     private List<ShoppingItem> coupons;
-	
+    private ListView list;
+    private ShoppingAdapter adapter;
+
+    private TextView creditsText;
+
+    private SynchronizeCouponsTask synchronizeCouponsTask;
+    private RequestCouponTask requestCouponTask;
+    private LoadShoppingTask loadShoppingTask;
+
 	public static ShoppingFragment newInstance() {
 		return new ShoppingFragment();
 	}
@@ -108,30 +108,15 @@ public class ShoppingFragment extends Fragment{
         creditsText.setText(DataHolder.getCredits()+" €");
         creditsText.invalidate();
 
-//        final Button synchronizeCoupons = (Button) rootView.findViewById(R.id.synchronizeCoupons);
-//        synchronizeCoupons.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (synchronizeCouponsTask != null){
-//                    return;
-//                }
-//
-//                synchronizeCouponsTask = new SynchronizeCouponsTask();
-//                synchronizeCouponsTask.execute((Void) null);
-//            }
-//        });
-
 		list = (ListView) rootView.findViewById(R.id.list_view);
         final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefresh);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 if (synchronizeCouponsTask != null) {
-                    Log.i("","sincronizza non è nullo");
                     swipeRefreshLayout.setRefreshing(false);
                     return;
                 }
-                Log.i("","creo sincronizza");
                 synchronizeCouponsTask = new SynchronizeCouponsTask();
                 synchronizeCouponsTask.execute();
                 swipeRefreshLayout.setRefreshing(false);
@@ -157,11 +142,15 @@ public class ShoppingFragment extends Fragment{
         @Override
         protected Boolean doInBackground(Void... params) {
 
+            String coupon_json;
             try {
-                if (DataHolder.testing) {
+                if (DataHolder.testing_with_server) {
+
                     String ember_token = DataHolder.getAuthToken();
                     coupon_json = client.synchronizeCouponTypes(ember_token);
+
                 } else {
+
                     InputStream inputStream = getResources().openRawResource(R.raw.coupon_types);
                     BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder total = new StringBuilder();
@@ -219,7 +208,6 @@ public class ShoppingFragment extends Fragment{
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Log.e("aaa", "caricata immagine dal link " + s.getUrl());
             }
             db.close();
             return true;
@@ -252,11 +240,12 @@ public class ShoppingFragment extends Fragment{
         @Override
         protected Boolean doInBackground(Void... params) {
 
+            String requested_coupon_json;
             try {
                 if (requestedCoupon.getCredits() > DataHolder.getCredits())
                     return false;
 
-                if (DataHolder.testing) {
+                if (DataHolder.testing_with_server) {
                     String ember_token = DataHolder.getAuthToken();
                     requested_coupon_json = client.requestCoupon(mCoupon, ember_token);
                 } else {
@@ -301,9 +290,7 @@ public class ShoppingFragment extends Fragment{
                 DataHolder.setCredits(DataHolder.getCredits()-credits);
                 creditsText.setText(DataHolder.getCredits()+" €");
                 creditsText.invalidate();
-//                Toast.makeText(getActivity(),
-//                        "id = "+id+" coupon = "+shop+" credits = "+credits+" code = "+code
-//                        ,Toast.LENGTH_LONG).show();
+
                 Intent intent = new Intent(getActivity(), ShowCode.class);
                 intent.putExtra("calling_activity","shopping");
                 startActivity(intent);

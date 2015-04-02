@@ -2,6 +2,7 @@ package com.banana.projectapp.communication;
 
 import android.util.Log;
 
+import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.CampaignInvalid;
 import com.banana.projectapp.exception.CouponTypeInvalid;
@@ -24,7 +25,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
 
     private String TAG = "client";
 
-    private Socket sock;
+    private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
@@ -33,13 +34,13 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
     private void initialize() throws NoConnectionException {
         try{
 
-            InetAddress ADDRESS = InetAddress.getByName("172.25.16.45");
+            InetAddress ADDRESS = InetAddress.getByName(DataHolder.getServerIP());
             int PORT = 9000;
-            sock = new Socket(ADDRESS, PORT);
-            out = new ObjectOutputStream(new BufferedOutputStream(sock.getOutputStream()));
+            socket = new Socket(ADDRESS, PORT);
             Log.i(TAG,"connesso al server");
+            out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             out.flush();
-            in = new ObjectInputStream(new BufferedInputStream(sock.getInputStream()));
+            in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
             Log.i(TAG,"creati gli stream");
 
         } catch(IOException ex){
@@ -49,44 +50,9 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
 
     private void close() throws IOException {
 
-        sock.close();
-        sock = null;
+        socket.close();
+        socket = null;
         Log.i(TAG,"chiudo il socket");
-    }
-
-    @Override
-    public void registration(final String facebookAccessToken)
-            throws SocialAccountTokenInvalid, IOException, NoConnectionException {
-
-        initialize();
-        out.writeObject("registration");
-        out.writeObject(facebookAccessToken);
-        out.flush();
-
-        try {
-
-            Object result = in.readObject();
-            if (result instanceof SocialAccountTokenInvalid){
-                throw (SocialAccountTokenInvalid) result;
-            } else if (result instanceof String) {
-                if (result.equals("OK"))
-                    Log.i(TAG, "registrazione effettuata con successo");
-                else
-                    Log.i(TAG, "problemi con la registrazione");
-            } else {
-                throw (IOException) result;
-            }
-
-        } catch (ClassNotFoundException e) {
-            throw new IOException("class not found");
-        } finally {
-            try {
-
-                close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -308,10 +274,7 @@ public class ClientStub implements CommunicationProfileInterface, CommunicationC
             else if (result instanceof PostInvalid) { throw (PostInvalid) result; }
             else if (result instanceof SocialTypeInvalid) { throw (SocialTypeInvalid) result; }
             else if (result instanceof String) {
-                if (result.equals("OK"))
-                    Log.i(TAG,"partecipazione aggiunta con successo");
-                else
-                    return (String)result;
+                return (String)result;
             }
 
         } catch (ClassNotFoundException e) {

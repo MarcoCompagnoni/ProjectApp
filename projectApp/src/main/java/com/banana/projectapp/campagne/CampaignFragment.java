@@ -13,7 +13,7 @@ import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.db.DBManager;
 import com.banana.projectapp.exception.NoConnectionException;
-import com.banana.projectapp.social.ShowCampaign;
+import com.banana.projectapp.main.ShowCampaign;
 import com.banana.projectapp.R;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.main.MainFragmentActivity;
@@ -25,7 +25,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,16 +39,16 @@ import org.json.JSONObject;
 
 public class CampaignFragment extends Fragment {
 
-	CampaignAdapter adapter;
-	ListView list;
-    ClientStub client;
-    SynchronizeCampaignTask synchronizeCampaignTask;
-    LoadCampaignTask loadCampaignTask;
-    TextView credits;
-    SwipeRefreshLayout swipeRefreshLayout;
+    private ClientStub client;
 
-    String campaign_json;
-    private List<CompanyCampaign> campaigns;
+    private List<Campaign> campaigns;
+    private ListView list;
+	private CampaignAdapter adapter;
+
+    private TextView credits;
+
+    private SynchronizeCampaignTask synchronizeCampaignTask;
+    private LoadCampaignTask loadCampaignTask;
 
     public static CampaignFragment newInstance() {
 		return new CampaignFragment();
@@ -75,7 +74,6 @@ public class CampaignFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         client = new ClientStub();
 
     }
@@ -101,52 +99,39 @@ public class CampaignFragment extends Fragment {
     @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.campagne, container,
                 false);
+
         TextView nome = (TextView) rootView.findViewById(R.id.nome_utente);
         nome.setText(DataHolder.getUserName());
         nome.invalidate();
-
         credits = (TextView) rootView.findViewById(R.id.numero_crediti);
-        credits.setText(DataHolder.getCredits()+" CR");
+        credits.setText(DataHolder.getCredits()+" €");
         credits.invalidate();
-
-//        final Button synchronizeCampaign = (Button) rootView.findViewById(R.id.synchronizeCampaign);
-//        synchronizeCampaign.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (synchronizeCampaignTask != null){
-//                    return;
-//                }
-//                synchronizeCampaignTask = new SynchronizeCampaignTask();
-//                synchronizeCampaignTask.execute((Void) null);
-//            }
-//        });
 
         list = (ListView) rootView.findViewById(R.id.list_view);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getActivity(),campaigns.get(position).getType().toString(),Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(),campaigns.get(position).getType().toString(),
+                        Toast.LENGTH_SHORT).show();
             }
         });
-        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefresh);
 
+        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefresh);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 if (synchronizeCampaignTask != null) {
-                    Log.i("","sincronizza non è nullo");
                     swipeRefreshLayout.setRefreshing(false);
                     return;
                 }
-                Log.i("","creo sincronizza");
                 synchronizeCampaignTask = new SynchronizeCampaignTask();
                 synchronizeCampaignTask.execute();
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
-
 
 		return rootView;
 	}
@@ -160,19 +145,21 @@ public class CampaignFragment extends Fragment {
 
     private class SynchronizeCampaignTask extends AsyncTask<Void, Void, Boolean> {
 
-        ArrayList<CompanyCampaign> campaignList = new ArrayList<>();
-
-        SynchronizeCampaignTask() {}
+        ArrayList<Campaign> campaignList = new ArrayList<>();
 
         @Override
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (DataHolder.testing) {
+                String campaign_json;
+                if (DataHolder.testing_with_server) {
+
                     String ember_token = DataHolder.getAuthToken();
                     campaign_json = client.synchronizeCampaigns(ember_token);
+
                 } else {
-                    InputStream inputStream = getResources().openRawResource(R.raw.campaigns2);
+
+                    InputStream inputStream = getResources().openRawResource(R.raw.campaigns);
                     BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder total = new StringBuilder();
                     String line;
@@ -187,23 +174,22 @@ public class CampaignFragment extends Fragment {
                 JSONArray aa = o.getJSONArray("data");
                 int number_of_campaigns = aa.length();
                 for (int i=0; i<number_of_campaigns;i++){
-                    JSONObject obj = aa.getJSONObject(i);
 
-                    CompanyCampaign c = new CompanyCampaign(
+                    JSONObject obj = aa.getJSONObject(i);
+                    Campaign c = new Campaign(
                             obj.getLong("id"),
                             obj.getString("url"),
                             obj.getString("customer"),
                             (float)obj.getDouble("userGain"),
-                            CompanyCampaign.CampaignType.valueOf(obj.getString("type")),
+                            Campaign.CampaignType.valueOf(obj.getString("type")),
                             obj.getDouble("latitude"),
                             obj.getDouble("longitude"));
-                    Log.e("","url="+c.getUrl());
+
                     campaignList.add(c);
                 }
 
             } catch (IOException | AuthTokenInvalid | JSONException e) {
                 e.printStackTrace();
-                Log.e("","boh");
             } catch (NoConnectionException e) {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
@@ -219,7 +205,8 @@ public class CampaignFragment extends Fragment {
             DBManager db = new DBManager(getActivity()).open();
             db.deleteCampaigns();
 
-            for (CompanyCampaign c : campaignList) {
+            // download logo per ogni campagna
+            for (Campaign c : campaignList) {
                 HttpURLConnection connection;
                 try {
                     connection = (HttpURLConnection) new URL(c.getUrl()).openConnection();
@@ -239,7 +226,6 @@ public class CampaignFragment extends Fragment {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Log.e("aaa", "caricata immagine dal link " + c.getUrl());
             }
             db.close();
             return true;
@@ -271,7 +257,7 @@ public class CampaignFragment extends Fragment {
         @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
-                adapter = new com.banana.projectapp.campagne.CampaignAdapter(getActivity(), campaigns);
+                adapter = new CampaignAdapter(getActivity(), campaigns);
                 list.setAdapter(adapter);
 
                 list.setOnItemClickListener(new AdapterView.OnItemClickListener() {

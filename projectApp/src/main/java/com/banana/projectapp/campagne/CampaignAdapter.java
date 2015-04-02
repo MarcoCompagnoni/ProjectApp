@@ -5,7 +5,6 @@ import java.util.List;
 import com.banana.projectapp.R;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,28 +13,25 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import static com.banana.projectapp.campagne.CompanyCampaign.*;
-import static com.banana.projectapp.campagne.CompanyCampaign.CampaignType.*;
-
 public class CampaignAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
-	List<CompanyCampaign> companies;
+	List<Campaign> campaigns;
     private Context context;
 	
-	public CampaignAdapter(Context context, List<CompanyCampaign> companies) {
+	public CampaignAdapter(Context context, List<Campaign> campaigns) {
 		mInflater = LayoutInflater.from(context);
-		this.companies = companies;
+		this.campaigns = campaigns;
         this.context = context;
 	}
 
 	@Override
 	public int getCount() {
-		return companies.size();
+		return campaigns.size();
 	}
 
 	@Override
 	public Object getItem(int position) {
-		return companies.get(position);
+		return campaigns.get(position);
 	}
 
 	@Override
@@ -45,28 +41,32 @@ public class CampaignAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		View view;
+
+        View view;
 		ViewHolder holder;
 		if(convertView == null) {
+
 			view = mInflater.inflate(R.layout.row_item_campagna, parent, false);
 			holder = new ViewHolder();
 			holder.avatar = (ImageView)view.findViewById(R.id.avatar);
 			holder.name = (TextView)view.findViewById(R.id.name);
 			holder.credits = (TextView)view.findViewById(R.id.credits);
             holder.type = (ImageView)view.findViewById(R.id.type);
-
 			view.setTag(holder);
+
 		} else {
+
 			view = convertView;
 			holder = (ViewHolder)view.getTag();
+
 		}
 		
-		CompanyCampaign campagna = companies.get(position);
-		holder.avatar.setImageBitmap(campagna.getLogo());
-		holder.name.setText(campagna.getName());
-        holder.credits.setText(campagna.getUserGain()+ " €");
+		Campaign campaign = campaigns.get(position);
+		holder.avatar.setImageBitmap(campaign.getLogo());
+		holder.name.setText(campaign.getName());
+        holder.credits.setText(campaign.getUserGain()+ " €");
 
-        switch (campagna.getType()){
+        switch (campaign.getType()){
             case GEO:
                 holder.type.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),R.drawable.mappin));
                 break;

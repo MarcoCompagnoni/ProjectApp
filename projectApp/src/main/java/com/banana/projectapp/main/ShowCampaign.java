@@ -1,10 +1,10 @@
-package com.banana.projectapp.social;
+package com.banana.projectapp.main;
 
 import java.io.IOException;
 
 import com.banana.projectapp.DataHolder;
 import com.banana.projectapp.R;
-import com.banana.projectapp.campagne.CompanyCampaign;
+import com.banana.projectapp.campagne.Campaign;
 import com.banana.projectapp.communication.ClientStub;
 import com.banana.projectapp.exception.AuthTokenInvalid;
 import com.banana.projectapp.exception.CampaignInvalid;
@@ -13,8 +13,6 @@ import com.banana.projectapp.exception.NoConnectionException;
 import com.banana.projectapp.exception.PostInvalid;
 import com.banana.projectapp.exception.SocialAccountTokenInvalid;
 import com.banana.projectapp.exception.SocialTypeInvalid;
-import com.banana.projectapp.main.MainFragmentActivity;
-import com.banana.projectapp.shop.ShowCode;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -46,13 +44,14 @@ public class ShowCampaign extends ActionBarActivity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         OnMapReadyCallback{
 
-    GoogleApiClient mGoogleApiClient;
-    Location mLastLocation;
+    private ClientStub client;
+
+    private GoogleApiClient mGoogleApiClient;
     private MapView mapView;
-    ClientStub client;
-    //TextView geoView;
-    Button confirm;
-    ParticipateCampaignTask participateCampaignTask;
+    private Location mLastLocation;
+
+    private Button confirm;
+    private ParticipateCampaignTask participateCampaignTask;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -73,7 +72,6 @@ public class ShowCampaign extends ActionBarActivity
         TextView credits = (TextView) findViewById(R.id.crediti_campagna);
         credits.setText(DataHolder.getCampaign().getUserGain()+" €");
         credits.invalidate();
-        //geoView = (TextView) findViewById(R.id.geoView);
         confirm = (Button) findViewById(R.id.geoButton);
         confirm.setOnClickListener(new View.OnClickListener(){
 
@@ -81,11 +79,10 @@ public class ShowCampaign extends ActionBarActivity
             public void onClick(View v) {
                 participateCampaignTask = new ParticipateCampaignTask();
                 participateCampaignTask.execute((Void) null);
-                Log.e("","lancio participate campaign task");
             }
         });
 
-        if (DataHolder.getCampaign().getType() != CompanyCampaign.CampaignType.PHOTO) {
+        if (DataHolder.getCampaign().getType() != Campaign.CampaignType.PHOTO) {
 
             buildGoogleApiClient();
             mGoogleApiClient.connect();
@@ -168,8 +165,6 @@ public class ShowCampaign extends ActionBarActivity
 
 
         if (mLastLocation != null){
-            //geoView.setText(String.valueOf(mLastLocation.getLatitude()) + String.valueOf(mLastLocation.getLongitude()));
-            //geoView.invalidate();
             confirm.setEnabled(true);
         }
     }
@@ -192,7 +187,7 @@ public class ShowCampaign extends ActionBarActivity
         googleMap.setMyLocationEnabled(true);
         double latitude = mLastLocation.getLatitude();
         double longitude = mLastLocation.getLongitude();
-        LatLng mylocation = new LatLng(latitude, longitude);
+        LatLng myLocation = new LatLng(latitude, longitude);
 
         LatLng local = new LatLng(DataHolder.getCampaign().getLatitude(),
                 DataHolder.getCampaign().getLongitude());
@@ -200,10 +195,10 @@ public class ShowCampaign extends ActionBarActivity
                 local).title(DataHolder.getCampaign().getName()));
         float zoom = 15;
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                new CameraPosition(mylocation,zoom,0,0)));
+                new CameraPosition(myLocation,zoom,0,0)));
         googleMap.addCircle(new CircleOptions()
                 .center(local)
-                .radius(10)
+                .radius(50)
                 .visible(true)
                 .strokeColor(R.color.material_blue_grey_800));
     }
@@ -217,18 +212,16 @@ public class ShowCampaign extends ActionBarActivity
         protected Boolean doInBackground(Void... params) {
 
             try {
-                if (DataHolder.testing) {
+                if (DataHolder.testing_with_server) {
                     String ember_token = DataHolder.getAuthToken();
 
-                    Log.e("","client.participate campaign");
-
-                    if (DataHolder.getCampaign().getType() != CompanyCampaign.CampaignType.PHOTO) {
+                    if (DataHolder.getCampaign().getType() != Campaign.CampaignType.PHOTO) {
 
                         code = client.participateCampaign(
                                 (int) DataHolder.getCampaign().getId(),
                                 DataHolder.SocialType.FACEBOOK,
-                                DataHolder.getLocation().getLatitude(),
-                                DataHolder.getLocation().getLongitude(),
+                                mLastLocation.getLatitude(),
+                                mLastLocation.getLongitude(),
                                 ember_token);
                     } else {
                         client.participateCampaign(
@@ -265,7 +258,7 @@ public class ShowCampaign extends ActionBarActivity
         protected void onPostExecute(final Boolean success) {
             participateCampaignTask = null;
             if (success) {
-                if (DataHolder.getCampaign().getType() == CompanyCampaign.CampaignType.PHOTO) {
+                if (DataHolder.getCampaign().getType() == Campaign.CampaignType.PHOTO) {
                     DataHolder.setCredits(DataHolder.getCredits() + DataHolder.getCampaign().getUserGain());
                     Intent intent = new Intent(ShowCampaign.this, MainFragmentActivity.class);
                     startActivity(intent);

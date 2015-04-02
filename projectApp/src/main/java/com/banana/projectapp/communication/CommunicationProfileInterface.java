@@ -9,9 +9,6 @@ import java.io.IOException;
 
 public interface CommunicationProfileInterface {
 
-    void registration(String facebookAccessToken)
-            throws SocialAccountTokenInvalid, IOException, NoConnectionException;
-
     String login(String facebookAccessToken)
             throws UserInvalid, SocialAccountTokenInvalid, IOException, NoConnectionException;
 

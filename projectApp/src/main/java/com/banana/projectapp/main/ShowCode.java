@@ -1,4 +1,4 @@
-package com.banana.projectapp.shop;
+package com.banana.projectapp.main;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;

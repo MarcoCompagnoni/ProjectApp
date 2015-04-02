@@ -2194,11 +2194,10 @@ containing a value of this type.
     }
     public static final class raw {
         public static final int campaigns=0x7f050000;
-        public static final int campaigns2=0x7f050001;
-        public static final int coupon_types=0x7f050002;
-        public static final int gtm_analytics=0x7f050003;
-        public static final int requested_coupon=0x7f050004;
-        public static final int user_info=0x7f050005;
+        public static final int coupon_types=0x7f050001;
+        public static final int gtm_analytics=0x7f050002;
+        public static final int requested_coupon=0x7f050003;
+        public static final int user_info=0x7f050004;
     }
     public static final class string {
         public static final int abc_action_bar_home_description=0x7f0b0000;
